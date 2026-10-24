@@ -8,7 +8,7 @@ Built for the Microsoft x Premier League hackathon.
 | Part | State |
 | --- | --- |
 | Synthetic match generator | Done |
-| Metrics engine (xG, pass difficulty, control index, win probability) | Next |
+| Metrics engine (xG, pass difficulty, control index, win probability, key moments, player alerts) | Done |
 | Agents (Microsoft Agent Framework on Foundry) | Planned |
 | Live API + overlay UI | Planned |
 | Azure infra (Event Hubs, Cosmos DB, Container Apps) | Planned |
