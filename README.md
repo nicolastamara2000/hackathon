@@ -12,7 +12,20 @@ Built for the Microsoft x Premier League hackathon.
 | Agents (Microsoft Agent Framework on Foundry): stats analyst, explainer, narrator EN/ES, recap writer | Done |
 | Personalizer (fan, analyst, player focus; club, player, metric, language) | Done |
 | Live API (FastAPI, Server-Sent Events) + overlay web UI | Done |
-| Azure infra (Event Hubs, Cosmos DB, Container Apps) | Planned |
+| Azure infra (Bicep + azd): Container Apps, Event Hubs, Cosmos DB, managed identity | Done |
+
+## Architecture
+
+```
+synthetic generator ──> Azure Event Hubs ──> MatchSession (Container Apps)
+                                               │  metrics engine: xG, pass difficulty, control index, win probability
+                                               │  template card (EN/ES) published instantly
+                                               └─> agent crew (Microsoft Agent Framework on Foundry models)
+                                                     stats analyst (tools) -> explainer -> narrator EN/ES
+                                                     recap writer at HT/FT, shared moment log, fact check, fallback
+                                                   ──> upgraded card (same id, version 2)
+cards ──> Azure Cosmos DB (feed)    cards ──> personalizer ──> SSE per viewer ──> overlay web UI
+```
 
 ## Synthetic data
 
@@ -66,6 +79,25 @@ matchgen replay data/samples/SYN-000007-EBW-SLT.events.jsonl --speed 30
 matchgen validate --matches 40
 pytest
 ```
+
+## Deploy to Azure
+
+Needs the Azure CLI, the Azure Developer CLI (`azd`) and Docker.
+
+```bash
+az login && azd auth login
+azd env new match-copilot
+azd env set FOUNDRY_PROJECT_ENDPOINT "https://<resource>.services.ai.azure.com/api/projects/<project>"
+azd env set FOUNDRY_MODEL "<your model deployment name>"
+azd up                      # creates the resource group, builds the image, deploys
+
+# let the app's managed identity call your Foundry models
+az role assignment create --role "Azure AI User" \
+  --assignee "$(azd env get-value AZURE_MANAGED_IDENTITY_PRINCIPAL_ID)" \
+  --scope "<resource id of your Foundry resource>"
+```
+
+`azd up` prints the app URL. To delete everything after judging: `azd down --purge`.
 
 ## License
 

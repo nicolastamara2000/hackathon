@@ -28,7 +28,8 @@ from ..generator.engine import generate_match
 from ..narration.cards import Card
 from ..narration.personalize import ViewerProfile, view
 from ..session import MatchSession
-from .sources import event_source
+from .sources import event_source, eventhub_enabled
+from .store import make_store
 
 FIXTURES = [7, 21, 33, 8, 9]
 DEFAULT_SPEED = float(os.getenv("REPLAY_SPEED", "20"))
@@ -37,7 +38,7 @@ PITCH_EVENTS = {"Pass", "Carry", "Shot", "Dribble", "Kick Off", "Interception", 
 
 
 class Broadcast:
-    def __init__(self, seed: int, speed: float, client):
+    def __init__(self, seed: int, speed: float, client, store=None):
         self.seed = seed
         meta, self.events = generate_match(seed)
         self.meta = meta.model_dump()
@@ -45,6 +46,8 @@ class Broadcast:
         self.backlog: list[dict] = []
         self.queues: set[asyncio.Queue] = set()
         self.session.subscribe(self._fanout)
+        if store is not None:
+            self.session.subscribe(store)
         self.task = asyncio.create_task(self.session.run(event_source(self.meta, self.events, speed)))
 
     async def _fanout(self, msg: dict) -> None:
@@ -59,13 +62,14 @@ class Hub:
     def __init__(self):
         self.live: dict[int, Broadcast] = {}
         self.client = make_client()
+        self.store = make_store()
 
     def start(self, seed: int, speed: float, restart: bool = False) -> Broadcast:
         b = self.live.get(seed)
         if b is None or restart or b.task.done():
             if b is not None and not b.task.done():
                 b.task.cancel()
-            b = Broadcast(seed, speed, self.client)
+            b = Broadcast(seed, speed, self.client, self.store)
             self.live[seed] = b
         return b
 
@@ -100,7 +104,8 @@ def _sse(obj: dict) -> str:
 
 @app.get("/healthz")
 async def healthz():
-    return {"ok": True, "agents": hub.client is not None, "live": len(hub.live)}
+    return {"ok": True, "agents": hub.client is not None, "cosmos": hub.store is not None,
+            "eventhub": eventhub_enabled(), "live": len(hub.live)}
 
 
 @app.get("/api/matches")
