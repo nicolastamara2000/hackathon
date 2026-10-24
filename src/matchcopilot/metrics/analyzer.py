@@ -203,10 +203,11 @@ class MatchAnalyzer:
             if e.get("outcome") == "Complete":
                 st.passes_complete += 1
                 ps["passes_complete"] += 1
+                fwd = (e["end_location"][0] - e["location"][0]) * 105 / 120
                 if diff >= HARD_PASS:
                     st.hard_passes_complete += 1
                     ps["hard_passes_complete"] += 1
-                    fwd = (e["end_location"][0] - e["location"][0]) * 105 / 120
+                if diff >= HARD_PASS and fwd >= 10:  # only hard passes that move the team forward reach the screen
                     out.append(self._insight("hard_pass", 0.35 + 0.004 * (diff - HARD_PASS) + 0.01 * max(fwd, 0), e,
                                              difficulty=diff, length_m=e.get("pass_length_m"),
                                              ball_speed_kmh=e.get("ball_speed_kmh"),

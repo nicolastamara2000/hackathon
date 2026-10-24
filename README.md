@@ -9,7 +9,8 @@ Built for the Microsoft x Premier League hackathon.
 | --- | --- |
 | Synthetic match generator | Done |
 | Metrics engine (xG, pass difficulty, control index, win probability, key moments, player alerts) | Done |
-| Agents (Microsoft Agent Framework on Foundry) | Planned |
+| Agents (Microsoft Agent Framework on Foundry): stats analyst, explainer, narrator EN/ES, recap writer | Done |
+| Personalizer (fan, analyst, player focus; club, player, metric, language) | Done |
 | Live API + overlay UI | Planned |
 | Azure infra (Event Hubs, Cosmos DB, Container Apps) | Planned |
 
