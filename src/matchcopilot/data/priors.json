@@ -11,7 +11,7 @@
   "interceptions": {"min": 12, "max": 35},
   "pressures": {"min": 220, "max": 380},
   "fouls": {"min": 16, "max": 28},
-  "possessions": {"min": 150, "max": 260},
+  "possessions": {"min": 150, "max": 290},
   "outfield_distance_km": {"min": 9.0, "max": 12.5},
   "top_speed_kmh": {"min": 28.0, "max": 36.5},
   "shot_speed_kmh": {"min": 45.0, "max": 125.0}
