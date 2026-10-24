@@ -133,10 +133,10 @@ def template_text(insight: dict, teams: dict[str, str]) -> dict[str, CardText]:
     if k == "speed_alert":
         return {
             "en": CardText(fan=f"{p} hits {f['top_speed_kmh']:.1f} km/h!",
-                           analyst=f"{p}: top speed {f['top_speed_kmh']:.1f} km/h, {f['sprints']} sprints so far.",
+                           analyst=f"{p}: top speed {f['top_speed_kmh']:.1f} km/h, sprints so far: {f['sprints']}.",
                            why=f"That is above the {f['threshold_kmh']:.0f} km/h elite sprint mark."),
             "es": CardText(fan=f"¡{p} llega a {f['top_speed_kmh']:.1f} km/h!",
-                           analyst=f"{p}: velocidad máxima {f['top_speed_kmh']:.1f} km/h, {f['sprints']} sprints.",
+                           analyst=f"{p}: velocidad máxima {f['top_speed_kmh']:.1f} km/h, sprints: {f['sprints']}.",
                            why=f"Supera la marca de élite de {f['threshold_kmh']:.0f} km/h."),
         }
     if k == "distance_milestone":

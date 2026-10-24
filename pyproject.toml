@@ -15,10 +15,13 @@ dependencies = [
     "agent-framework-core>=1.23",
     "agent-framework-foundry>=1.15",
     "azure-identity>=1.26",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "httpx>=0.27"]
+azure = ["azure-eventhub>=5.11", "azure-cosmos>=4.7"]
 
 [project.scripts]
 matchgen = "matchcopilot.generator.cli:main"

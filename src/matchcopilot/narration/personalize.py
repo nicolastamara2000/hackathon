@@ -65,7 +65,9 @@ def view(card: Card, p: ViewerProfile) -> dict | None:
         "source": card.source, "tags": card.tags, "your_team": is_fav,
         "your_player": p.favorite_player is not None and card.player_id == p.favorite_player,
     }
-    if p.mode == "analyst":
+    if p.mode == "analyst" and always:  # big moments keep the headline, numbers go underneath
+        out.update(headline=t.fan, body=t.analyst, metrics=card.metrics)
+    elif p.mode == "analyst":
         out.update(headline=t.analyst, body=t.why, metrics=card.metrics)
     else:
         out.update(headline=t.fan, body=t.why if card.importance >= 0.6 or out["your_player"] else None,

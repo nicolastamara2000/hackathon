@@ -11,7 +11,7 @@ Built for the Microsoft x Premier League hackathon.
 | Metrics engine (xG, pass difficulty, control index, win probability, key moments, player alerts) | Done |
 | Agents (Microsoft Agent Framework on Foundry): stats analyst, explainer, narrator EN/ES, recap writer | Done |
 | Personalizer (fan, analyst, player focus; club, player, metric, language) | Done |
-| Live API + overlay UI | Planned |
+| Live API (FastAPI, Server-Sent Events) + overlay web UI | Done |
 | Azure infra (Event Hubs, Cosmos DB, Container Apps) | Planned |
 
 ## Synthetic data
@@ -47,7 +47,16 @@ ranges in `src/matchcopilot/data/priors.json`:
 | Fouls | 21.7 | 16 to 28 |
 | Outfield distance (90 min) | 10.8 km | 9.0 to 12.5 km |
 
-## Quick start
+## Run the app
+
+```bash
+cp .env.example .env          # add your Foundry endpoint + model to turn the agents on
+docker compose up --build     # then open http://localhost:8000
+```
+
+Without Foundry settings the app runs in template mode: every card still appears, in EN and ES.
+
+## Quick start (generator only)
 
 ```bash
 python -m venv .venv && source .venv/bin/activate

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match Co-pilot</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span>Match Co-pilot</div>
+  <div class="controls">
+    <select id="fixture" aria-label="Fixture"></select>
+    <label class="speed">Speed
+      <select id="speed" aria-label="Replay speed">
+        <option value="10">10x</option><option value="20" selected>20x</option>
+        <option value="40">40x</option><option value="90">90x</option>
+      </select>
+    </label>
+    <button id="start" class="primary">Start match</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage-wrap">
+    <div class="stage" id="stage">
+      <canvas id="pitch" width="1200" height="780" aria-label="Live pitch view"></canvas>
+      <div class="scorebug" id="scorebug">
+        <span class="sb-team" id="sb-home"><i></i><b>HOME</b></span>
+        <span class="sb-score" id="sb-score">0 - 0</span>
+        <span class="sb-team" id="sb-away"><b>AWAY</b><i></i></span>
+        <span class="sb-clock" id="sb-clock">0'</span>
+      </div>
+      <div class="slot top_bar" id="slot-top_bar"></div>
+      <div class="slot side_panel" id="slot-side_panel"></div>
+      <div class="slot lower_third" id="slot-lower_third"></div>
+      <div class="slot full_screen" id="slot-full_screen"></div>
+      <div class="idle" id="idle">Pick a fixture and press <b>Start match</b></div>
+    </div>
+    <div class="ticker" id="ticker" aria-live="polite"></div>
+  </section>
+
+  <aside class="side">
+    <section class="panel">
+      <h2>Your view</h2>
+      <div class="seg" id="mode" role="radiogroup" aria-label="Mode">
+        <button data-v="fan" class="on">Fan</button>
+        <button data-v="analyst">Analyst</button>
+        <button data-v="player">Player focus</button>
+      </div>
+      <div class="row">
+        <div class="seg small" id="lang" role="radiogroup" aria-label="Language">
+          <button data-v="en" class="on">EN</button><button data-v="es">ES</button>
+        </div>
+        <select id="team" aria-label="Favorite club"><option value="">Favorite club</option></select>
+      </div>
+      <div class="row">
+        <select id="player" aria-label="Favorite player"><option value="">Favorite player</option></select>
+        <select id="metric" aria-label="Metric I care about">
+          <option value="">Metric I care about</option>
+          <option value="xg">Chance quality (xG)</option>
+          <option value="control">Control vs chaos</option>
+          <option value="pass_difficulty">Pass difficulty</option>
+          <option value="speed">Speed</option>
+          <option value="distance">Distance</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Match intelligence</h2>
+      <div class="label">Win probability</div>
+      <div class="wp" id="wp"><span class="h"></span><span class="d"></span><span class="a"></span></div>
+      <div class="wp-legend" id="wp-legend"></div>
+      <div class="label">Control vs chaos, last 30 min</div>
+      <canvas id="control" width="560" height="120" aria-label="Control index chart"></canvas>
+      <table class="stats" id="stats"></table>
+    </section>
+
+    <section class="panel feed-panel">
+      <h2>Moments <span class="badge" id="agents-badge"></span></h2>
+      <ol class="feed" id="feed"></ol>
+    </section>
+  </aside>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -120,10 +120,12 @@ class MatchAnalyzer:
         prior_h = BASE_GOALS_PER_90 * math.exp(1.5 * (sh - sa)) * 1.08
         prior_a = BASE_GOALS_PER_90 * math.exp(1.5 * (sa - sh)) / 1.08
         played = max(self.minute, 1) / 90
-        w = min(played, 0.6)
+        w = 0.4 * min(played, 1.0)  # in-match xG pace earns trust slowly
         pace_h = self.stats[self.home].xg / played
         pace_a = self.stats[self.away].xg / played
-        return (1 - w) * prior_h + w * pace_h, (1 - w) * prior_a + w * pace_a
+        rh = (1 - w) * prior_h + w * pace_h
+        ra = (1 - w) * prior_a + w * pace_a
+        return max(rh, 0.6 * prior_h), max(ra, 0.6 * prior_a)
 
     def _pstat(self, pid: str) -> dict:
         return self.player_stats.setdefault(pid, {"passes": 0, "passes_complete": 0, "shots": 0, "xg": 0.0,
