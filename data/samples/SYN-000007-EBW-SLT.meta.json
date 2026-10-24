@@ -1,0 +1,352 @@
+{
+  "match_id": "SYN-000007-EBW-SLT",
+  "seed": 7,
+  "competition": "Synthetic Premier Division",
+  "matchday": 1,
+  "kickoff_utc": "2026-10-05T19:00:00Z",
+  "venue": "Eastbrook Park",
+  "referee": "J. Whitfield",
+  "weather": "Light rain, 9C",
+  "home": {
+    "id": "EBW",
+    "name": "Eastbrook Wanderers",
+    "short_name": "EBW",
+    "city": "Eastbrook",
+    "colors": [
+      "#C8102E",
+      "#1D428A"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.68,
+    "pressing": 0.58,
+    "directness": 0.3,
+    "lineup": [
+      {
+        "id": "EBW-1",
+        "name": "Viktor Alvarado",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.3,
+        "work_rate": 5.46
+      },
+      {
+        "id": "EBW-2",
+        "name": "Amadou Achterberg",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 32.7,
+        "work_rate": 10.56
+      },
+      {
+        "id": "EBW-4",
+        "name": "Omar Mbeki",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 34.5,
+        "work_rate": 9.51
+      },
+      {
+        "id": "EBW-5",
+        "name": "Thiago Mbeki",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 33.1,
+        "work_rate": 9.48
+      },
+      {
+        "id": "EBW-3",
+        "name": "Thiago Mensah",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 30.2,
+        "work_rate": 10.86
+      },
+      {
+        "id": "EBW-6",
+        "name": "Callum Varga",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 32.8,
+        "work_rate": 10.53
+      },
+      {
+        "id": "EBW-8",
+        "name": "Callum Carvalho",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 33.0,
+        "work_rate": 11.92
+      },
+      {
+        "id": "EBW-10",
+        "name": "Viktor Nakamura",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 30.7,
+        "work_rate": 12.31
+      },
+      {
+        "id": "EBW-7",
+        "name": "Kai Varga",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 32.4,
+        "work_rate": 10.81
+      },
+      {
+        "id": "EBW-11",
+        "name": "Amadou Diallo",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 34.6,
+        "work_rate": 11.4
+      },
+      {
+        "id": "EBW-9",
+        "name": "Oskar Holm",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 30.6,
+        "work_rate": 10.02
+      }
+    ],
+    "bench": [
+      {
+        "id": "EBW-13",
+        "name": "Sami Fontaine",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 29.7,
+        "work_rate": 5.91
+      },
+      {
+        "id": "EBW-15",
+        "name": "Matias Nakamura",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 32.6,
+        "work_rate": 10.08
+      },
+      {
+        "id": "EBW-14",
+        "name": "Tariq Moreau",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 31.9,
+        "work_rate": 11.67
+      },
+      {
+        "id": "EBW-16",
+        "name": "Matias Okonkwo",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 29.2,
+        "work_rate": 11.74
+      },
+      {
+        "id": "EBW-17",
+        "name": "Nico Whitlock",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 34.5,
+        "work_rate": 10.92
+      },
+      {
+        "id": "EBW-19",
+        "name": "Amadou Alvarado",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 33.0,
+        "work_rate": 10.14
+      }
+    ]
+  },
+  "away": {
+    "id": "SLT",
+    "name": "Silverlake Town",
+    "short_name": "SLT",
+    "city": "Silverlake",
+    "colors": [
+      "#8A9BA8",
+      "#0A1F44"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.63,
+    "pressing": 0.4,
+    "directness": 0.5,
+    "lineup": [
+      {
+        "id": "SLT-1",
+        "name": "Kenji Rinaldi",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 26.6,
+        "work_rate": 5.56
+      },
+      {
+        "id": "SLT-2",
+        "name": "Oskar Brennan",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 31.9,
+        "work_rate": 10.71
+      },
+      {
+        "id": "SLT-4",
+        "name": "Jonas Castillo",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 31.6,
+        "work_rate": 10.04
+      },
+      {
+        "id": "SLT-5",
+        "name": "Felix Kane-Ellis",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 31.9,
+        "work_rate": 10.09
+      },
+      {
+        "id": "SLT-3",
+        "name": "Santiago Haddad",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 30.9,
+        "work_rate": 10.84
+      },
+      {
+        "id": "SLT-6",
+        "name": "Felix Okonkwo",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 29.0,
+        "work_rate": 11.28
+      },
+      {
+        "id": "SLT-8",
+        "name": "Ravi Rinaldi",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 31.6,
+        "work_rate": 12.11
+      },
+      {
+        "id": "SLT-10",
+        "name": "Kai Haddad",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 32.9,
+        "work_rate": 11.47
+      },
+      {
+        "id": "SLT-7",
+        "name": "Liam Achterberg",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 33.7,
+        "work_rate": 10.39
+      },
+      {
+        "id": "SLT-11",
+        "name": "Rafael Rinaldi",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 33.4,
+        "work_rate": 10.21
+      },
+      {
+        "id": "SLT-9",
+        "name": "Ibrahim Asante",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 34.6,
+        "work_rate": 9.67
+      }
+    ],
+    "bench": [
+      {
+        "id": "SLT-13",
+        "name": "Amadou Sato",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.1,
+        "work_rate": 4.98
+      },
+      {
+        "id": "SLT-15",
+        "name": "Liam Ferreira",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 30.0,
+        "work_rate": 9.9
+      },
+      {
+        "id": "SLT-14",
+        "name": "Dario Mbeki",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 29.7,
+        "work_rate": 12.21
+      },
+      {
+        "id": "SLT-16",
+        "name": "Kai Diallo",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 31.4,
+        "work_rate": 11.77
+      },
+      {
+        "id": "SLT-17",
+        "name": "Joaquin Rinaldi",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 32.2,
+        "work_rate": 10.71
+      },
+      {
+        "id": "SLT-19",
+        "name": "Isaac Navarro",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 35.2,
+        "work_rate": 10.12
+      }
+    ]
+  }
+}
