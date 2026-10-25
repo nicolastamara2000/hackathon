@@ -1,0 +1,10 @@
+.git
+.venv
+**/__pycache__
+**/*.egg-info
+build
+.pytest_cache
+.env
+.azure
+frontend/node_modules
+frontend/dist
