@@ -60,14 +60,19 @@ ranges in `src/matchcopilot/data/priors.json`:
 | Fouls | 21.7 | 16 to 28 |
 | Outfield distance (90 min) | 10.8 km | 9.0 to 12.5 km |
 
-## Run the app
+## Run the app locally
 
 ```bash
-cp .env.example .env          # add your Foundry endpoint + model to turn the agents on
-docker compose up --build     # then open http://localhost:8000
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -e ".[dev,azure]"
+az login                                               # the agents use your Azure login
+export FOUNDRY_PROJECT_ENDPOINT="https://<resource>.services.ai.azure.com/api/projects/<project>"
+export FOUNDRY_MODEL="<your model deployment name>"
+uvicorn matchcopilot.api.app:app --port 8000           # open http://localhost:8000
 ```
 
-Without Foundry settings the app runs in template mode: every card still appears, in EN and ES.
+Without the two Foundry variables the app runs in template mode: every card still appears,
+in EN and ES, without the AI agents. `docker compose up --build` also runs template mode.
 
 ## Quick start (generator only)
 
