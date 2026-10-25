@@ -152,9 +152,12 @@ def unsupported_numbers(text: str, sources: list) -> list[str]:
 
 # ----------------------------------------------------------------- the crew
 class MatchCrew:
-    def __init__(self, client, ctx: MatchContext, step_timeout_s: float = 25.0):
+    def __init__(self, client, ctx: MatchContext, step_timeout_s: float | None = None):
         self.ctx = ctx
-        self.timeout = step_timeout_s
+        self.timeout = step_timeout_s or float(os.getenv("AGENT_STEP_TIMEOUT_S", "45"))
+        # reasoning models (gpt-5 family): low effort keeps a 3-step handoff fast enough for live play
+        effort = os.getenv("FOUNDRY_REASONING_EFFORT", "low")
+        self.extra_options = {"reasoning": {"effort": effort}} if effort and effort != "none" else {}
         tools = build_tools(ctx)
         self.stats = Agent(client, STATS_INSTRUCTIONS, name="stats_analyst", tools=tools)
         self.explainer = Agent(client, EXPLAINER_INSTRUCTIONS, name="explainer")
@@ -169,7 +172,8 @@ class MatchCrew:
             insight["importance"] >= ENRICH_MIN_IMPORTANCE or insight["kind"] in ("half_time", "full_time"))
 
     async def _run(self, agent: Agent, prompt: str, fmt):
-        resp = await asyncio.wait_for(agent.run(prompt, options={"response_format": fmt}), self.timeout)
+        resp = await asyncio.wait_for(
+            agent.run(prompt, options={"response_format": fmt, **self.extra_options}), self.timeout)
         value = resp.value
         if value is None:
             value = fmt.model_validate_json(resp.text)
