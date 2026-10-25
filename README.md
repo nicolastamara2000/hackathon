@@ -104,6 +104,21 @@ az role assignment create --role "Azure AI User" \
 
 `azd up` prints the app URL. To delete everything after judging: `azd down --purge`.
 
+### Without Docker
+
+If `azd up` stops at the image build (no Docker, or `TasksOperationsNotAllowed` on a free
+subscription), the infrastructure is already there. The `image` workflow builds the app on GitHub
+and publishes `ghcr.io/nicolastamara2000/hackathon:latest` on every push to `main`. Make that
+package public (GitHub > Packages > hackathon > Package settings > Change visibility), then:
+
+```bash
+az containerapp update -g rg-<env> -n "$(az containerapp list -g rg-<env> --query [0].name -o tsv)" \
+  --image ghcr.io/nicolastamara2000/hackathon:latest
+az containerapp show -g rg-<env> -n <app name> --query properties.configuration.ingress.fqdn -o tsv
+```
+
+Run the update again after each new push to `main`.
+
 ## License
 
 MIT
