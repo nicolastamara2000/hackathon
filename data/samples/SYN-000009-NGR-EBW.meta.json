@@ -1,0 +1,352 @@
+{
+  "match_id": "SYN-000009-NGR-EBW",
+  "seed": 9,
+  "competition": "Synthetic Premier Division",
+  "matchday": 3,
+  "kickoff_utc": "2026-10-15T15:00:00Z",
+  "venue": "Northgate Arena",
+  "referee": "R. Tanaka",
+  "weather": "Overcast, 11C",
+  "home": {
+    "id": "NGR",
+    "name": "Northgate Rovers",
+    "short_name": "NGR",
+    "city": "Northgate",
+    "colors": [
+      "#1E7B4F",
+      "#FFD23F"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.66,
+    "pressing": 0.62,
+    "directness": 0.45,
+    "lineup": [
+      {
+        "id": "NGR-1",
+        "name": "Kai Diallo",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.6,
+        "work_rate": 5.63
+      },
+      {
+        "id": "NGR-2",
+        "name": "Arjun Asante",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 32.2,
+        "work_rate": 10.36
+      },
+      {
+        "id": "NGR-4",
+        "name": "Bruno Haddad",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 27.9,
+        "work_rate": 9.47
+      },
+      {
+        "id": "NGR-5",
+        "name": "Matias Delgado",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 32.1,
+        "work_rate": 9.91
+      },
+      {
+        "id": "NGR-3",
+        "name": "Hugo Mbeki",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 31.5,
+        "work_rate": 10.47
+      },
+      {
+        "id": "NGR-6",
+        "name": "Kai Castillo",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 31.7,
+        "work_rate": 11.24
+      },
+      {
+        "id": "NGR-8",
+        "name": "Callum Mensah",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 31.8,
+        "work_rate": 11.59
+      },
+      {
+        "id": "NGR-10",
+        "name": "Ravi Diallo",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 31.6,
+        "work_rate": 11.52
+      },
+      {
+        "id": "NGR-7",
+        "name": "Viktor Delgado",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 33.2,
+        "work_rate": 11.25
+      },
+      {
+        "id": "NGR-11",
+        "name": "Callum Whitlock",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 33.0,
+        "work_rate": 11.04
+      },
+      {
+        "id": "NGR-9",
+        "name": "Matias Rojas",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 35.1,
+        "work_rate": 9.97
+      }
+    ],
+    "bench": [
+      {
+        "id": "NGR-13",
+        "name": "Kai Okonkwo",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.6,
+        "work_rate": 5.37
+      },
+      {
+        "id": "NGR-15",
+        "name": "Arjun Navarro",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 29.6,
+        "work_rate": 9.67
+      },
+      {
+        "id": "NGR-14",
+        "name": "Ethan Brennan",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 32.4,
+        "work_rate": 11.12
+      },
+      {
+        "id": "NGR-16",
+        "name": "Noah Marsh",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 29.9,
+        "work_rate": 11.01
+      },
+      {
+        "id": "NGR-17",
+        "name": "Dario Lindqvist",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 33.4,
+        "work_rate": 10.88
+      },
+      {
+        "id": "NGR-19",
+        "name": "Marco Sorensen",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 31.0,
+        "work_rate": 10.77
+      }
+    ]
+  },
+  "away": {
+    "id": "EBW",
+    "name": "Eastbrook Wanderers",
+    "short_name": "EBW",
+    "city": "Eastbrook",
+    "colors": [
+      "#C8102E",
+      "#1D428A"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.68,
+    "pressing": 0.58,
+    "directness": 0.3,
+    "lineup": [
+      {
+        "id": "EBW-1",
+        "name": "Nico Okonkwo",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 28.3,
+        "work_rate": 5.82
+      },
+      {
+        "id": "EBW-2",
+        "name": "Noah Ibarra",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 31.7,
+        "work_rate": 10.63
+      },
+      {
+        "id": "EBW-4",
+        "name": "Kenji Kowalski",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 31.2,
+        "work_rate": 9.39
+      },
+      {
+        "id": "EBW-5",
+        "name": "Matias Quintero",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 32.4,
+        "work_rate": 9.74
+      },
+      {
+        "id": "EBW-3",
+        "name": "Kofi Duarte",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 31.9,
+        "work_rate": 11.16
+      },
+      {
+        "id": "EBW-6",
+        "name": "Kofi Rinaldi",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 30.7,
+        "work_rate": 11.28
+      },
+      {
+        "id": "EBW-8",
+        "name": "Hugo Benali",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 32.6,
+        "work_rate": 11.58
+      },
+      {
+        "id": "EBW-10",
+        "name": "Andre Toure",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 30.6,
+        "work_rate": 11.16
+      },
+      {
+        "id": "EBW-7",
+        "name": "Joaquin Petrov",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 35.8,
+        "work_rate": 10.8
+      },
+      {
+        "id": "EBW-11",
+        "name": "Ethan Hartley",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 34.2,
+        "work_rate": 11.09
+      },
+      {
+        "id": "EBW-9",
+        "name": "Bruno Toure",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 32.5,
+        "work_rate": 10.6
+      }
+    ],
+    "bench": [
+      {
+        "id": "EBW-13",
+        "name": "Felix Carvalho",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.4,
+        "work_rate": 5.61
+      },
+      {
+        "id": "EBW-15",
+        "name": "Jonas Eriksen",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 32.1,
+        "work_rate": 9.69
+      },
+      {
+        "id": "EBW-14",
+        "name": "Omar Mbeki",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 32.2,
+        "work_rate": 11.13
+      },
+      {
+        "id": "EBW-16",
+        "name": "Yusuf Marsh",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 29.7,
+        "work_rate": 11.38
+      },
+      {
+        "id": "EBW-17",
+        "name": "Noah Mensah",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 31.9,
+        "work_rate": 10.63
+      },
+      {
+        "id": "EBW-19",
+        "name": "Tomas Kowalski",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 32.3,
+        "work_rate": 9.87
+      }
+    ]
+  }
+}

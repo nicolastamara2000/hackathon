@@ -1,0 +1,352 @@
+{
+  "match_id": "SYN-000008-NGR-SLT",
+  "seed": 8,
+  "competition": "Synthetic Premier Division",
+  "matchday": 2,
+  "kickoff_utc": "2026-10-26T17:00:00Z",
+  "venue": "Northgate Arena",
+  "referee": "J. Whitfield",
+  "weather": "Clear, 19C",
+  "home": {
+    "id": "NGR",
+    "name": "Northgate Rovers",
+    "short_name": "NGR",
+    "city": "Northgate",
+    "colors": [
+      "#1E7B4F",
+      "#FFD23F"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.66,
+    "pressing": 0.62,
+    "directness": 0.45,
+    "lineup": [
+      {
+        "id": "NGR-1",
+        "name": "Tomas Rojas",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.0,
+        "work_rate": 5.0
+      },
+      {
+        "id": "NGR-2",
+        "name": "Sami Haddad",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 32.4,
+        "work_rate": 10.07
+      },
+      {
+        "id": "NGR-4",
+        "name": "Marco Kowalski",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 31.9,
+        "work_rate": 9.97
+      },
+      {
+        "id": "NGR-5",
+        "name": "Marco Navarro",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 33.2,
+        "work_rate": 9.58
+      },
+      {
+        "id": "NGR-3",
+        "name": "Jonas Castillo",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 31.8,
+        "work_rate": 10.41
+      },
+      {
+        "id": "NGR-6",
+        "name": "Jude Petrov",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 31.6,
+        "work_rate": 10.97
+      },
+      {
+        "id": "NGR-8",
+        "name": "Felix Carvalho",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 33.2,
+        "work_rate": 11.88
+      },
+      {
+        "id": "NGR-10",
+        "name": "Oskar Sorensen",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 32.8,
+        "work_rate": 11.55
+      },
+      {
+        "id": "NGR-7",
+        "name": "Diego Mensah",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 34.5,
+        "work_rate": 10.55
+      },
+      {
+        "id": "NGR-11",
+        "name": "Hugo Larsen",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 33.5,
+        "work_rate": 10.97
+      },
+      {
+        "id": "NGR-9",
+        "name": "Nico Okafor",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 31.6,
+        "work_rate": 9.68
+      }
+    ],
+    "bench": [
+      {
+        "id": "NGR-13",
+        "name": "Ibrahim Mensah",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 28.0,
+        "work_rate": 5.55
+      },
+      {
+        "id": "NGR-15",
+        "name": "Diego Larsen",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 32.0,
+        "work_rate": 9.85
+      },
+      {
+        "id": "NGR-14",
+        "name": "Leon Marsh",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 31.2,
+        "work_rate": 11.61
+      },
+      {
+        "id": "NGR-16",
+        "name": "Amadou Moreau",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 34.5,
+        "work_rate": 11.58
+      },
+      {
+        "id": "NGR-17",
+        "name": "Omar Rojas",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 32.3,
+        "work_rate": 10.95
+      },
+      {
+        "id": "NGR-19",
+        "name": "Thiago Haddad",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 31.7,
+        "work_rate": 10.82
+      }
+    ]
+  },
+  "away": {
+    "id": "SLT",
+    "name": "Silverlake Town",
+    "short_name": "SLT",
+    "city": "Silverlake",
+    "colors": [
+      "#8A9BA8",
+      "#0A1F44"
+    ],
+    "formation": "4-3-3",
+    "strength": 0.63,
+    "pressing": 0.4,
+    "directness": 0.5,
+    "lineup": [
+      {
+        "id": "SLT-1",
+        "name": "Diego Alvarado",
+        "number": 1,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.0,
+        "work_rate": 5.15
+      },
+      {
+        "id": "SLT-2",
+        "name": "Kenji Achterberg",
+        "number": 2,
+        "position": "RB",
+        "role": "DEF",
+        "top_speed_kmh": 32.0,
+        "work_rate": 10.47
+      },
+      {
+        "id": "SLT-4",
+        "name": "Matias Kane-Ellis",
+        "number": 4,
+        "position": "RCB",
+        "role": "DEF",
+        "top_speed_kmh": 33.4,
+        "work_rate": 8.98
+      },
+      {
+        "id": "SLT-5",
+        "name": "Ethan Kane-Ellis",
+        "number": 5,
+        "position": "LCB",
+        "role": "DEF",
+        "top_speed_kmh": 32.2,
+        "work_rate": 10.16
+      },
+      {
+        "id": "SLT-3",
+        "name": "Lucas Achterberg",
+        "number": 3,
+        "position": "LB",
+        "role": "DEF",
+        "top_speed_kmh": 31.3,
+        "work_rate": 10.18
+      },
+      {
+        "id": "SLT-6",
+        "name": "Isaac Achterberg",
+        "number": 6,
+        "position": "CDM",
+        "role": "MID",
+        "top_speed_kmh": 31.2,
+        "work_rate": 11.53
+      },
+      {
+        "id": "SLT-8",
+        "name": "Amadou Navarro",
+        "number": 8,
+        "position": "RCM",
+        "role": "MID",
+        "top_speed_kmh": 32.5,
+        "work_rate": 11.92
+      },
+      {
+        "id": "SLT-10",
+        "name": "Ibrahim Larsen",
+        "number": 10,
+        "position": "LCM",
+        "role": "MID",
+        "top_speed_kmh": 30.8,
+        "work_rate": 11.26
+      },
+      {
+        "id": "SLT-7",
+        "name": "Isaac Oduya",
+        "number": 7,
+        "position": "RW",
+        "role": "FWD",
+        "top_speed_kmh": 34.2,
+        "work_rate": 10.79
+      },
+      {
+        "id": "SLT-11",
+        "name": "Amadou Marsh",
+        "number": 11,
+        "position": "LW",
+        "role": "FWD",
+        "top_speed_kmh": 34.0,
+        "work_rate": 10.27
+      },
+      {
+        "id": "SLT-9",
+        "name": "Diego Mbeki",
+        "number": 9,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 33.5,
+        "work_rate": 10.74
+      }
+    ],
+    "bench": [
+      {
+        "id": "SLT-13",
+        "name": "Hugo Delgado",
+        "number": 13,
+        "position": "GK",
+        "role": "GK",
+        "top_speed_kmh": 27.9,
+        "work_rate": 5.75
+      },
+      {
+        "id": "SLT-15",
+        "name": "Felix Rojas",
+        "number": 15,
+        "position": "CB",
+        "role": "DEF",
+        "top_speed_kmh": 32.9,
+        "work_rate": 9.67
+      },
+      {
+        "id": "SLT-14",
+        "name": "Callum Navarro",
+        "number": 14,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 29.7,
+        "work_rate": 11.05
+      },
+      {
+        "id": "SLT-16",
+        "name": "Joaquin Oduya",
+        "number": 16,
+        "position": "CM",
+        "role": "MID",
+        "top_speed_kmh": 31.3,
+        "work_rate": 12.2
+      },
+      {
+        "id": "SLT-17",
+        "name": "Nico Ferreira",
+        "number": 17,
+        "position": "W",
+        "role": "FWD",
+        "top_speed_kmh": 35.7,
+        "work_rate": 10.89
+      },
+      {
+        "id": "SLT-19",
+        "name": "Mateo Petrov",
+        "number": 19,
+        "position": "ST",
+        "role": "FWD",
+        "top_speed_kmh": 34.2,
+        "work_rate": 9.82
+      }
+    ]
+  }
+}
