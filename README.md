@@ -87,7 +87,7 @@ pytest
 
 ## Deploy to Azure
 
-Needs the Azure CLI, the Azure Developer CLI (`azd`) and Docker.
+Needs the Azure CLI and the Azure Developer CLI (`azd`). No local Docker: the image is built in Azure Container Registry (`remoteBuild: true`).
 
 ```bash
 az login && azd auth login
