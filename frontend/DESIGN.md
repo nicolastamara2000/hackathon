@@ -1,7 +1,7 @@
 # Broadcast UI: design notes
 
 React + TypeScript + Tailwind, D3 (pitch, momentum strip), Recharts (win %, xG), Framer Motion (overlays).
-Served by FastAPI at `/app`. The classic UI stays at `/`.
+Served by FastAPI at `/`. The first UI stays at `/classic`.
 
 ## Live Match View: wireframe
 
