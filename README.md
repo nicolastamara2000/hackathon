@@ -1,34 +1,32 @@
-# Match Co-pilot
+# PITCHIQ
 
-Synthetic football match events turned into explainable, personalized match intelligence.
-Built for the Microsoft x Premier League hackathon.
+Real-time football intelligence from synthetic match events: what changed, why it matters and what to watch next.
+Built for the Microsoft football AI hackathon. Submission kit, demo script and testing steps: `docs/SUBMISSION.md`.
 
-## Status
+![Architecture](docs/img/architecture.png)
 
-| Part | State |
+## What it does
+
+| Part | Where |
 | --- | --- |
-| Synthetic match generator | Done |
-| Metrics engine (xG, pass difficulty, control index, win probability, key moments, player alerts) | Done |
-| Agents (Microsoft Agent Framework on Foundry): stats analyst, explainer, narrator EN/ES, recap writer | Done |
-| Personalizer (fan, analyst, player focus; club, player, metric, language) | Done |
-| Live API (FastAPI, Server-Sent Events) + overlay web UI | Done |
-| Azure infra (Bicep + azd): Container Apps, Event Hubs, Cosmos DB, managed identity | Done |
+| Synthetic match generator (~1,900 events per match, 15 benchmark targets) | `src/matchcopilot/generator` |
+| Metrics engine: xG, pass difficulty, control index, win probability, key moments | `src/matchcopilot/metrics`, `frontend/src/stats` |
+| Tactical Turning Point Engine: 8 signals, confidence, lifecycle, evidence links | `frontend/src/stats/turning.ts` |
+| Agent crew (Microsoft Agent Framework on Foundry): stats analyst, explainer, narrator EN/ES, recap writer | `src/matchcopilot/agents/crew.py` |
+| AI match story and AI player report: story and scout writers, fact-checked | `src/matchcopilot/agents/writers.py` |
+| Live API (FastAPI, Server-Sent Events) and React UI: Fan, Analyst, Player focus; EN/ES | `src/matchcopilot/api`, `frontend/` |
+| Azure infra (Bicep + azd): Container Apps, Event Hubs, Cosmos DB, managed identity | `infra/` |
 
-## Broadcast UI (React)
+## Frontend (React)
 
-`frontend/` is the new broadcast-style app: Live Match View with a D3 pitch, win probability,
-momentum wave and scrubbable timeline, Analyst and Fan modes, EN / ES, dark and light themes.
-It replays a generated match until it is wired to the live socket. Design notes: `frontend/DESIGN.md`.
-
-Run it locally (PowerShell, Node 22):
+`frontend/` is the PITCHIQ app, served by FastAPI at `/` (the first UI stays at `/classic`).
+React, TypeScript, Tailwind, D3, Recharts and Framer Motion. Design notes: `frontend/DESIGN.md`.
 
 ```powershell
 cd frontend
 npm install
-npm run dev        # http://localhost:5173/app/
+npm run dev        # proxies /api to the FastAPI server on :8000
 ```
-
-The Docker image builds it and FastAPI serves it at `/app` (the classic UI stays at `/`).
 
 ## Architecture
 
@@ -40,6 +38,7 @@ synthetic generator ──> Azure Event Hubs ──> MatchSession (Container App
                                                      stats analyst (tools) -> explainer -> narrator EN/ES
                                                      recap writer at HT/FT, shared moment log, fact check, fallback
                                                    ──> upgraded card (same id, version 2)
+browser engines (stats, turning points) ──> facts ──> story writer / scout writer (Foundry) ──> fact check ──> AI story, player report
 cards ──> Azure Cosmos DB (feed)    cards ──> personalizer ──> SSE per viewer ──> overlay web UI
 ```
 

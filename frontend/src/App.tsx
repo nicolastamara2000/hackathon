@@ -6,7 +6,7 @@ import { MomentumStrip } from "./components/MomentumStrip";
 import { Pitch } from "./components/Pitch";
 import { PlayerPanel } from "./components/PlayerPanel";
 import { Scoreboard } from "./components/Scoreboard";
-import { METRICS, PREVIEW_UNTIL, Setup, type Choices, type Mode } from "./components/Setup";
+import { METRICS, Setup, type Choices, type Mode } from "./components/Setup";
 import { SourceDrawer } from "./components/SourceDrawer";
 import { Spotlight } from "./components/Spotlight";
 import { KIND } from "./components/Moments";
@@ -19,7 +19,7 @@ import { playerFacts } from "./stats/aiFacts";
 import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
-import { fetchEvents, fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
+import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
 import type { MatchEvent, MatchMeta, MomentCard } from "./feed/types";
 import { STRINGS, type Locale } from "./i18n/strings";
 import { applyTeamColors, type TeamPalette } from "./lib/teamColors";
@@ -75,11 +75,6 @@ export default function App() {
       load.then((m) => setMetas((all) => ({ ...all, [f.seed]: m }))).catch(() => undefined);
     }
   }, [fixtures, offline]);
-  const loadPreview = useCallback(
-    (seed: number) =>
-      offline ? loadDemoMatch().then((d) => d.events.filter((e) => e.clock_s <= PREVIEW_UNTIL)) : fetchEvents(seed, PREVIEW_UNTIL),
-    [offline],
-  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -137,7 +132,6 @@ export default function App() {
           <Setup
             fixtures={fixtures}
             metas={metas}
-            loadPreview={loadPreview}
             choices={choices}
             setChoices={setChoices}
             onStart={start}
