@@ -80,16 +80,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Presión", headline: `${T} sube la presión`,
             fan: `${T} está robando la pelota arriba: ${m("hiRec").now} recuperaciones altas.`,
             observed: `Recuperaciones en campo rival: ${pn("hiRec")}. Pases hacia adelante de ${O}: ${pn("oppFwd")}.`,
-            why: `${O} tiene menos tiempo para salir jugando; cada robo alto deja a ${T} cerca del arco.`,
-            next: `Si sigue así, ${O} podría buscar pelotas largas para saltar la presión.`,
+            why: `${T} adelanta líneas y salta a presionar a los centrales y al volante de salida de ${O}. Cada robo alto es una transición corta, con la defensa rival desordenada y a pocos metros del arco.`,
+            next: `Mirá si ${O} saca al arquero largo para saltear la presión, o baja un volante entre los centrales para tener salida limpia.`,
             limits: `Puede reflejar errores de ${O} más que un cambio de plan de ${T}. No hay datos de posición sin pelota.`,
           }
         : {
             category: "Pressing", headline: `${T} press higher`,
             fan: `${T} are winning the ball high up: ${m("hiRec").now} high recoveries.`,
             observed: `Recoveries in the opponent half: ${pn("hiRec")}. ${O} forward-pass completion: ${pn("oppFwd")}.`,
-            why: `${O} get less time to build from the back; each high win leaves ${T} close to goal.`,
-            next: `If it continues, ${O} may go longer to bypass the press.`,
+            why: `${T} push their lines up and jump onto ${O}'s centre-backs and holding midfielder. Every high regain is a short transition against a defence that is out of shape and close to its own goal.`,
+            next: `Watch whether ${O} go long from the keeper to skip the press, or drop a midfielder between the centre-backs to build cleanly.`,
             limits: `Could reflect ${O} errors rather than a ${T} plan change. No off-ball tracking data.`,
           };
     case "forward_drop":
@@ -98,16 +98,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Progresión", headline: `${T} no logra avanzar`,
             fan: `A ${T} le cuesta pasar hacia adelante: ${pct(m("fwdPct").now)} de acierto.`,
             observed: `Pases hacia adelante completados: ${pn("fwdPct")} (${m("fwdAtt").now} intentos). Recuperaciones altas de ${O}: ${pn("oppHiRec")}.`,
-            why: `Sin progresión, ${T} pierde la pelota antes de llegar al último tercio.`,
-            next: `Si continúa, ${T} podría necesitar cambiar de frente más rápido o sumar un pase extra en el medio.`,
+            why: `${T} no encuentra al hombre libre entre líneas: los pases verticales se cortan y la pelota vuelve atrás o se pierde antes del último tercio. Así no puede fijar a la defensa rival.`,
+            next: `Mirá si ${T} usa más los laterales para salir por afuera, cambia de frente más rápido o tira un volante a los half-spaces para dar una línea de pase.`,
             limits: `Muestra chica: ${m("fwdAtt").now} pases. Puede ser cansancio o riesgo deliberado.`,
           }
         : {
             category: "Progression", headline: `${T} struggle to progress`,
             fan: `${T} can't find forward passes: ${pct(m("fwdPct").now)} completed.`,
             observed: `Forward-pass completion: ${pn("fwdPct")} (${m("fwdAtt").now} tried). ${O} high recoveries: ${pn("oppHiRec")}.`,
-            why: `Without progression, ${T} lose the ball before reaching the final third.`,
-            next: `If it continues, ${T} may need to switch play faster or add a passing option in midfield.`,
+            why: `${T} can't find the free man between the lines: vertical passes are cut out and the ball goes backwards or is lost before the final third, so they never pin the back line.`,
+            next: `Watch whether ${T} use the full-backs to go round the block, switch play faster, or drop a midfielder into the half-spaces to open a passing lane.`,
             limits: `Small sample: ${m("fwdAtt").now} passes. Could be fatigue or deliberate risk-taking.`,
           };
     case "flank_shift": {
@@ -119,16 +119,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Espacio", headline: `${T} carga el juego por la ${side}`,
             fan: `${T} ataca casi todo por la ${side}: ${pct(m(k).now)} de sus acciones.`,
             observed: `Acciones por la ${side}: ${pn(k)} del total de ${T}.`,
-            why: `Sobrecargar una banda busca superioridad numérica ahí, pero deja el lado opuesto libre.`,
-            next: `Si ${O} cierra esa banda, un cambio de frente rápido al lado débil podría abrir espacio.`,
+            why: `${T} junta lateral, extremo y volante en esa banda para crear superioridad y triangular. ${O} bascula hacia ese lado, y eso deja al lateral y al extremo del lado contrario con espacio.`,
+            next: `Mirá el cambio de frente al lado débil: si ${O} cierra la banda cargada, el espacio aparece del otro lado.`,
             limits: `El lado se mide desde la dirección de ataque de ${T}. Puede ser donde ${O} deja espacio, no un plan.`,
           }
         : {
             category: "Space", headline: `${T} shift play to the ${side}`,
             fan: `${T} are attacking down the ${side}: ${pct(m(k).now)} of their play.`,
             observed: `Actions on the ${side} flank: ${pn(k)} of ${T}'s on-ball actions.`,
-            why: `Overloading one flank creates numbers there but leaves the far side open.`,
-            next: `If ${O} close that flank, a quick switch to the weak side could open space.`,
+            why: `${T} stack full-back, winger and midfielder on that side to create an overload and play in triangles. ${O} shift across to cope, which leaves space for the far-side full-back and winger.`,
+            next: `Watch for the switch to the weak side: if ${O} lock down the loaded flank, the space is on the other one.`,
             limits: `Flank is measured from ${T}'s attacking direction. It may be where ${O} allow space, not a plan.`,
           };
     }
@@ -138,16 +138,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Territorio", headline: `${T} empuja a ${O} contra su arco`,
             fan: `${T} juega en campo rival: ${pct(m("fieldTilt").now)} de los pases en el último tercio.`,
             observed: `Inclinación de campo: ${pn("fieldTilt")}. Pases en último tercio: ${pn("ftPasses")}.`,
-            why: `Más tiempo cerca del área rival suele traer más tiros y más pelotas paradas.`,
-            next: `Si ${T} no convierte el territorio en tiros, ${O} tendrá espacio para contragolpear.`,
+            why: `${T} instala el juego en campo rival y hunde el bloque de ${O}. Con los centrales arriba, defiende la pérdida rápido (contrapresión) y vive de centros, segundas pelotas y córners.`,
+            next: `Mirá la defensa de ${T} sin pelota: con tanta gente arriba, una contra de ${O} encuentra espacio a la espalda de los laterales.`,
             limits: `Territorio no es lo mismo que peligro: mirá el xG del mismo período.`,
           }
         : {
             category: "Territory", headline: `${T} pin ${O} back`,
             fan: `${T} are camped in the opponent's half: ${pct(m("fieldTilt").now)} of final-third passes.`,
             observed: `Field tilt: ${pn("fieldTilt")}. Final-third passes: ${pn("ftPasses")}.`,
-            why: `More time near the box usually brings more shots and set pieces.`,
-            next: `If ${T} don't turn territory into shots, ${O} will have space to counter.`,
+            why: `${T} have settled in the opponent's half and pushed ${O}'s block deep. With the centre-backs high they can counter-press any loss, and live off crosses, second balls and corners.`,
+            next: `Watch ${T}'s rest defence: with this many players committed, an ${O} counter finds space behind the full-backs.`,
             limits: `Territory is not danger: check the xG over the same window.`,
           };
     case "threat_surge":
@@ -156,16 +156,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Amenaza", headline: `${T} se vuelve peligroso`,
             fan: `¡${T} está cerca del gol! xG ${m("xg").now.toFixed(2)} en los últimos minutos.`,
             observed: `xT generado: ${pn("xt")}. xG: ${pn("xg")}. Tiros: ${pn("shots")}.`,
-            why: `${T} está llevando la pelota a zonas de las que salen goles.`,
-            next: `Si se mantiene, un gol de ${T} es más probable que antes; ${O} podría bajar el bloque.`,
+            why: `${T} ya no circula por afuera: entra al área, recibe entre líneas y encuentra al delantero de frente al arco. Son las zonas de donde salen los goles.`,
+            next: `Mirá si ${O} baja el bloque y cierra el centro con un quinto defensor, o si el gol de ${T} llega antes.`,
             limits: `xT es un modelo simple de amenaza por zona; no ve a los defensores.`,
           }
         : {
             category: "Threat", headline: `${T} turn up the threat`,
             fan: `${T} are knocking on the door: ${m("xg").now.toFixed(2)} xG in the last minutes.`,
             observed: `Expected threat added: ${pn("xt")}. xG: ${pn("xg")}. Shots: ${pn("shots")}.`,
-            why: `${T} are moving the ball into the zones goals come from.`,
-            next: `If it holds, a ${T} goal is more likely than before; ${O} may drop deeper.`,
+            why: `${T} have stopped circulating wide: they are getting into the box, receiving between the lines and finding the striker facing goal. Those are the zones goals come from.`,
+            next: `Watch whether ${O} drop deeper and add a fifth defender to close the middle, or whether ${T}'s goal comes first.`,
             limits: `xT is a simple zone threat model; it does not see defenders.`,
           };
     case "sterile_possession":
@@ -174,16 +174,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Control", headline: `${T} tiene la pelota, pero no lastima`,
             fan: `${T} tiene ${pct(m("possShare").now)} de la pelota y casi nada de peligro.`,
             observed: `% de acciones con pelota: ${pn("possShare")}. xG: ${pn("xg")}. Pases en último tercio: ${pn("ftPasses")}.`,
-            why: `Posesión sin llegadas: ${O} defiende cómodo y espera el error.`,
-            next: `Si ${T} no acelera o no mete más gente en el área, la posesión seguirá sin premio.`,
+            why: `${O} cede la pelota a propósito: bloque medio compacto, centro cerrado y ${T} circulando en U por delante, sin pases que rompan líneas.`,
+            next: `Mirá si ${T} acelera la circulación, busca la espalda con un pase en profundidad o mete más gente en el área. Si no, ${O} espera el error para salir de contra.`,
             limits: `Posesión medida por acciones con pelota, no por tiempo.`,
           }
         : {
             category: "Control", headline: `${T} have the ball but no bite`,
             fan: `${T} have ${pct(m("possShare").now)} of the ball and almost no danger.`,
             observed: `Share of on-ball actions: ${pn("possShare")}. xG: ${pn("xg")}. Final-third passes: ${pn("ftPasses")}.`,
-            why: `Possession without penetration: ${O} defend comfortably and wait for a mistake.`,
-            next: `Unless ${T} speed up or commit more players to the box, the ball will stay unrewarded.`,
+            why: `${O} are happy to give up the ball: a compact mid block, the middle closed, and ${T} circulating in a U-shape in front of it without line-breaking passes.`,
+            next: `Watch whether ${T} speed up circulation, try a ball in behind, or commit more runners to the box. If not, ${O} wait for the mistake and counter.`,
             limits: `Possession measured by on-ball actions, not by time.`,
           };
     case "chaos":
@@ -192,16 +192,16 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Ritmo", headline: `El partido se rompe: ida y vuelta`,
             fan: `¡Ida y vuelta! ${m("turnovers").now.toFixed(1)} pérdidas por minuto.`,
             observed: `Pérdidas por minuto: ${pn("turnovers")}. Tiros de ambos: ${pn("shotsBoth")}.`,
-            why: `Con tantas pérdidas, nadie controla el medio y cualquiera puede llegar.`,
-            next: `Si sigue roto, gana el equipo más rápido en transición; el que va ganando querría calmarlo.`,
+            why: `El medio se partió: los equipos están largos, nadie hace la pausa y cada pérdida es una transición. Gana el que tenga mejor defensa de la pérdida.`,
+            next: `Mirá quién pide la pelota para hacer la pausa: el que va ganando querrá cortar el ritmo con faltas tácticas y posesión.`,
             limits: `Pérdidas = cambios de posesión en acciones con pelota.`,
           }
         : {
             category: "Rhythm", headline: `The game breaks open`,
             fan: `End to end! ${m("turnovers").now.toFixed(1)} turnovers a minute.`,
             observed: `Turnovers per minute: ${pn("turnovers")}. Shots, both teams: ${pn("shotsBoth")}.`,
-            why: `With this many turnovers, nobody controls midfield and both sides can reach goal.`,
-            next: `If it stays open, the faster transition team gains; the leading side would want to slow it down.`,
+            why: `Midfield has been skipped: both teams are stretched, nobody slows the game and every loss becomes a transition. The side with the better rest defence wins this phase.`,
+            next: `Watch who takes the sting out of it: the leading side will want to slow the tempo with tactical fouls and keep-ball.`,
             limits: `Turnovers = possession changes on on-ball actions.`,
           };
     case "reaction": {
@@ -216,7 +216,7 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Reacción", headline: `${T} cambia tras ${what}`,
             fan: `Desde ${what}, ${T} juega más arriba.`,
             observed: `10 min antes vs 10 min después (${tp.extra.triggerMinute}′): inclinación de campo ${pn("fieldTilt")}, xT ${pn("xt")}.`,
-            why: `${T} ganó terreno después del evento: puede ser ajuste táctico o efecto emocional.`,
+            why: `Después del evento ${T} adelantó la línea y empujó con más gente: puede ser una orden del banco, un cambio de sistema o un golpe anímico.`,
             next: `Si se sostiene, ${T} debería generar más tiros en los próximos minutos.`,
             limits: `Antes/después de un solo evento: correlación, no causa probada.`,
           }
@@ -224,7 +224,7 @@ export function tpText(tp: TurningPoint, meta: MatchMeta, locale: Locale): TPTex
             category: "Reaction", headline: `${T} change after ${what}`,
             fan: `Since ${what}, ${T} are playing higher up the pitch.`,
             observed: `10 min before vs 10 min after (${tp.extra.triggerMinute}′): field tilt ${pn("fieldTilt")}, xT ${pn("xt")}.`,
-            why: `${T} gained territory after the event: a tactical adjustment or an emotional lift.`,
+            why: `After the event ${T} raised their defensive line and committed more players forward: a call from the bench, a change of shape, or an emotional lift.`,
             next: `If it holds, ${T} should create more shots in the next minutes.`,
             limits: `Before/after a single event: correlation, not proven cause.`,
           };

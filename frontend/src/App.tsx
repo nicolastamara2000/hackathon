@@ -6,7 +6,7 @@ import { MomentumStrip } from "./components/MomentumStrip";
 import { Pitch } from "./components/Pitch";
 import { PlayerPanel } from "./components/PlayerPanel";
 import { Scoreboard } from "./components/Scoreboard";
-import { Setup, type Choices, type Mode } from "./components/Setup";
+import { METRICS, PREVIEW_UNTIL, Setup, type Choices, type Mode } from "./components/Setup";
 import { SourceDrawer } from "./components/SourceDrawer";
 import { Spotlight } from "./components/Spotlight";
 import { KIND } from "./components/Moments";
@@ -17,7 +17,7 @@ import { MatchStory } from "./components/MatchStory";
 import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
-import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
+import { fetchEvents, fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
 import type { MatchEvent, MatchMeta, MomentCard } from "./feed/types";
 import { STRINGS, type Locale } from "./i18n/strings";
 import { applyTeamColors, type TeamPalette } from "./lib/teamColors";
@@ -44,7 +44,7 @@ export default function App() {
   const [screen, setScreen] = useState<"setup" | "live">("setup");
   const [choices, setChoices] = useState<Choices>(DEFAULTS);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [setupMeta, setSetupMeta] = useState<MatchMeta | null>(null);
+  const [metas, setMetas] = useState<Record<number, MatchMeta>>({});
   const [offline, setOffline] = useState(false);
   const [starting, setStarting] = useState(false);
   const [runId, setRunId] = useState(0);
@@ -66,10 +66,18 @@ export default function App() {
       });
   }, []);
 
+  // every fixture's teams, for crests on the match picker
   useEffect(() => {
-    const load = offline ? loadDemoMatch().then((d) => d.meta) : fetchMeta(choices.seed);
-    load.then(setSetupMeta).catch(() => setSetupMeta(null));
-  }, [choices.seed, offline]);
+    for (const f of fixtures) {
+      const load = offline ? loadDemoMatch().then((d) => d.meta) : fetchMeta(f.seed);
+      load.then((m) => setMetas((all) => ({ ...all, [f.seed]: m }))).catch(() => undefined);
+    }
+  }, [fixtures, offline]);
+  const loadPreview = useCallback(
+    (seed: number) =>
+      offline ? loadDemoMatch().then((d) => d.events.filter((e) => e.clock_s <= PREVIEW_UNTIL)) : fetchEvents(seed, PREVIEW_UNTIL),
+    [offline],
+  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -118,7 +126,7 @@ export default function App() {
         setLocale={(locale) => setChoices({ ...choices, locale })}
         theme={theme}
         setTheme={setTheme}
-        onChangeMatch={() => setScreen("setup")}
+        onHome={() => setScreen("setup")}
         onRestart={start}
         t={t}
       />
@@ -126,7 +134,8 @@ export default function App() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <Setup
             fixtures={fixtures}
-            meta={setupMeta}
+            metas={metas}
+            loadPreview={loadPreview}
             choices={choices}
             setChoices={setChoices}
             onStart={start}
@@ -136,7 +145,18 @@ export default function App() {
           />
         </div>
       ) : (
-        <Live feed={feed} choices={choices} offline={offline} theme={theme} t={t} />
+        <Live
+          feed={feed}
+          choices={choices}
+          offline={offline}
+          theme={theme}
+          t={t}
+          // remember the pace so a reconnect (mode or language switch) keeps it
+          onSpeed={(speed) => {
+            feed.setSpeed(speed);
+            setChoices((c) => ({ ...c, speed }));
+          }}
+        />
       )}
     </div>
   );
@@ -148,7 +168,9 @@ function Live({
   offline,
   theme,
   t,
+  onSpeed,
 }: {
+  onSpeed(speed: number): void;
   feed: ReturnType<typeof useMatchFeed>;
   choices: Choices;
   offline: boolean;
@@ -161,7 +183,12 @@ function Live({
   const [layer, setLayer] = useState<Layer>(defaultLayer);
   const [mapSide, setMapSide] = useState<"home" | "away" | undefined>(undefined);
   useEffect(() => setLayer(defaultLayer), [defaultLayer, choices.mode]);
+  // map time window: sprints and zones read best recent, shots and passes over the match
+  const [win, setWin] = useState<MapWindow>("match");
+  useEffect(() => setWin(layer === "speed" || layer === "zones" ? "15" : "match"), [layer]);
   const [statKey, setStatKey] = useState<string | null>(null);
+  // Player focus picks its player here, not on the landing page; switching does not reconnect the feed
+  const [focusId, setFocusId] = useState(choices.player);
   const [palette, setPalette] = useState<TeamPalette>(PALETTE_FALLBACK);
   const [slow, setSlow] = useState(false);
   const { meta, stats, breaks } = feed;
@@ -208,7 +235,7 @@ function Live({
   const teamSide = choices.team === meta.home.id ? "home" : choices.team === meta.away.id ? "away" : undefined;
   // Player focus always follows someone: the pick, else the favorite club's (or home) striker
   const focusTeam = meta[teamSide ?? "home"];
-  const playerId = choices.player || (mode === "player" ? (focusTeam.lineup.find((p) => p.role === "FWD") ?? focusTeam.lineup[0]).id : "");
+  const playerId = focusId || choices.player || (mode === "player" ? (focusTeam.lineup.find((p) => p.role === "FWD") ?? focusTeam.lineup[0]).id : "");
   const cut = feed.events.filter((e) => e.clock_s <= feed.clock);
   const connecting = !hasEvents && (
     <div className="absolute inset-0 grid place-items-center">
@@ -219,28 +246,65 @@ function Live({
       </div>
     </div>
   );
-  const pitch = (withLayers: boolean) => (
-    <>
-      {withLayers && (
-        <LayerBar layer={layer} setLayer={setLayer} side={mapSide} setSide={mode === "player" ? undefined : setMapSide} meta={meta} t={t} hasInsight={!!selectedTp} />
-      )}
-      <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
-        <Pitch
-          feed={feed}
-          palette={palette}
-          t={t}
-          focusPlayerId={playerId || undefined}
-          layer={withLayers || (layer === "insight" && selectedTp) ? layer : "live"}
-          insight={selectedTp}
-          filter={mode === "player" ? { playerId } : { side: mapSide }}
-          onPick={jump}
-        >
-          <OverlayLayer cards={feed.cards} events={feed.events} clock={feed.clock} isLive={feed.isLive} palette={palette} meta={meta} t={t} />
-        </Pitch>
-        {connecting}
-      </div>
-    </>
+  const now = Math.floor(feed.clock);
+  const half2 = cut.find((e) => e.period === 2)?.clock_s;
+  const mapFrom = win === "5" ? now - 300 : win === "15" ? now - 900 : win === "half" ? half2 ?? 0 : 0;
+  const live = (compact: boolean) => (
+    <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
+      <Pitch feed={feed} palette={palette} t={t} focusPlayerId={playerId || undefined} onPick={jump}>
+        <OverlayLayer cards={feed.cards} events={feed.events} clock={feed.clock} isLive={feed.isLive} palette={palette} meta={meta} t={t} compact={compact} />
+      </Pitch>
+      {connecting}
+    </div>
   );
+  // the live picture is never covered: a map opens beside it (below it on small screens)
+  const pitch = (withLayers: boolean) => {
+    const mapLayer: Layer = withLayers ? layer : layer === "insight" && selectedTp ? "insight" : "live";
+    return (
+      <>
+        {withLayers && (
+          <LayerBar layer={layer} setLayer={setLayer} side={mapSide} setSide={mode === "player" ? undefined : setMapSide} meta={meta} t={t} hasInsight={!!selectedTp} />
+        )}
+        {mapLayer === "live" ? (
+          live(false)
+        ) : (
+          <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-2">
+            <div className="flex min-h-0 flex-col gap-1">
+              <div className="eyebrow flex h-7 items-center gap-1.5"><span className="h-2 w-2 animate-pulse rounded-full bg-live" /> {t.liveView}</div>
+              {live(true)}
+            </div>
+            <div className="flex min-h-0 flex-col gap-1">
+              <div className="flex h-7 items-center gap-2">
+                <span className="eyebrow">{t.mapView}</span>
+                {mapLayer !== "insight" && (
+                  <div role="group" aria-label={t.mapView} className="ml-auto flex overflow-hidden rounded ring-1 ring-line">
+                    {(["5", "15", "half", "match"] as MapWindow[]).map((w) => (
+                      <button key={w} onClick={() => setWin(w)} aria-pressed={win === w} className={`px-2 py-0.5 text-xs font-semibold ${win === w ? "bg-ink text-bg" : "text-muted hover:bg-raised"}`}>
+                        {w === "5" ? t.win5 : w === "15" ? t.win15 : w === "half" ? t.winHalf : t.winMatch}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
+                <Pitch
+                  feed={feed}
+                  palette={palette}
+                  t={t}
+                  layer={mapLayer}
+                  insight={selectedTp}
+                  filter={mode === "player" ? { playerId } : { side: mapSide }}
+                  onPick={jump}
+                  mapOnly
+                  mapFrom={mapLayer === "insight" ? 0 : Math.max(0, mapFrom)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
   const strip = (
     <MomentumStrip
       meta={meta}
@@ -255,7 +319,7 @@ function Live({
       t={t}
       onSeek={feed.seekPlay}
       onLive={feed.goLive}
-      onSpeed={offline ? feed.setSpeed : undefined}
+      onSpeed={onSpeed}
       turning={tps
         .filter((x) => x.impact !== "low")
         .map((x) => ({ id: x.id, play_s: x.play_s, side: x.side, impact: x.impact, minute: x.minute, label: tpText(x, meta, choices.locale).headline }))}
@@ -391,6 +455,20 @@ function Live({
           </div>
           <aside className="panel flex min-h-[420px] flex-col overflow-y-auto lg:min-h-0">
             {offlineNote}
+            <label className="flex items-center gap-2 border-b border-line px-4 py-2.5">
+              <span className="eyebrow">{t.choosePlayer}</span>
+              <select value={playerId} onChange={(e) => setFocusId(e.target.value)} aria-label={t.choosePlayer} className="min-w-0 flex-1 rounded bg-surface px-2 py-1.5 font-semibold ring-1 ring-line">
+                {[meta.home, meta.away].map((team) => (
+                  <optgroup key={team.id} label={team.name}>
+                    {team.lineup.concat(team.bench).map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.number} · {p.name} · {p.position}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
             <PlayerPanel meta={meta} events={feed.events} clock={Math.floor(feed.clock)} playerId={playerId} palette={palette} t={t} onJump={jump} />
             <div className="border-t border-line">
               <TurningPanel
@@ -426,6 +504,8 @@ function Live({
     </>
   );
 }
+
+type MapWindow = "5" | "15" | "half" | "match";
 
 function LayerBar({
   layer,
@@ -565,42 +645,29 @@ function TopBar(p: {
   setLocale(l: Locale): void;
   theme: Theme;
   setTheme(t: Theme): void;
-  onChangeMatch(): void;
+  onHome(): void;
   onRestart(): void;
   t: (typeof STRINGS)["en"];
 }) {
   return (
     <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
-      <div className="num mr-auto text-xl font-bold tracking-wide">
+      <button onClick={p.onHome} title={p.t.home} className="num mr-auto rounded text-xl font-bold tracking-wide hover:opacity-80">
         PITCH<span className="text-accent">IQ</span>
-        <span className="ml-2 hidden align-middle font-sans text-2xs font-semibold tracking-wider text-muted sm:inline">SYNTHETIC DATA</span>
-      </div>
+      </button>
       {p.screen === "live" && (
         <>
           <Segmented label={p.t.mode} value={p.mode} onChange={p.setMode} options={[["fan", p.t.fan], ["analyst", p.t.analyst], ["player", p.t.player]]} />
-          <select
-            value={p.metric}
-            onChange={(e) => p.setMetric(e.target.value)}
-            aria-label={p.t.stepMetric}
-            title={p.t.stepMetric}
-            className="rounded bg-surface px-2 py-1 text-sm font-semibold ring-1 ring-line"
-          >
-            {(
-              [
-                ["", `${p.t.stepMetric}: ${p.t.none}`],
-                ["xg", p.t.metricXg],
-                ["control", p.t.metricControl],
-                ["pass_difficulty", p.t.metricPass],
-                ["speed", p.t.metricSpeed],
-                ["distance", p.t.metricDistance],
-              ] as [string, string][]
-            ).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
-          <button onClick={p.onChangeMatch} className="rounded px-3 py-1 text-sm font-semibold text-muted ring-1 ring-line hover:bg-raised">
+          <label className="flex items-center gap-1.5 rounded bg-surface py-0.5 pl-2 pr-1 text-sm ring-1 ring-line" title={p.t.stepMetric}>
+            <span className="eyebrow">{p.t.focusMetric}</span>
+            <select value={p.metric} onChange={(e) => p.setMetric(e.target.value)} aria-label={p.t.stepMetric} className="bg-transparent py-0.5 font-semibold">
+              {METRICS(p.t).map(([v, icon, l]) => (
+                <option key={v} value={v}>
+                  {icon} {l}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button onClick={p.onHome} className="rounded px-3 py-1 text-sm font-semibold text-muted ring-1 ring-line hover:bg-raised">
             ⇆ {p.t.changeMatch}
           </button>
           <button onClick={p.onRestart} className="rounded px-3 py-1 text-sm font-semibold text-muted ring-1 ring-line hover:bg-raised">

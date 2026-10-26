@@ -40,8 +40,10 @@ export class LiveSocket implements FeedSocket {
     this.es.onmessage = (ev) => this.handle(JSON.parse(ev.data));
   }
 
-  setSpeed() {
-    // the broadcast speed is fixed when the match starts; replay uses it too
+  setSpeed(speed: number) {
+    // the broadcast keeps running; every viewer of it follows the new pace
+    this.speed = speed;
+    fetch(`/api/live/${this.seed}/speed?speed=${speed}`, { method: "POST" }).catch(() => {});
   }
 
   close() {
@@ -119,4 +121,6 @@ export interface Fixture {
 }
 
 export const fetchFixtures = async (): Promise<Fixture[]> => (await fetch("/api/matches")).json();
+export const fetchEvents = async (seed: number, until?: number): Promise<MatchEvent[]> =>
+  (await fetch(`/api/matches/${seed}/events${until !== undefined ? `?until=${until}` : ""}`)).json();
 export const fetchMeta = async (seed: number): Promise<MatchMeta> => (await fetch(`/api/matches/${seed}`)).json();

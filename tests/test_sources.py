@@ -56,3 +56,23 @@ def test_silent_event_hub_falls_back_to_local_replay(monkeypatch):
 
     out = asyncio.run(asyncio.wait_for(collect(), 30))
     assert len(out) == len(events)
+
+
+def test_pace_change_applies_mid_replay():
+    import asyncio
+
+    pace = sources.Pace(1)
+    evs = [{"clock_s": 0, "index": 0}, {"clock_s": 600, "index": 1}]
+
+    async def run():
+        out = []
+        async def bump():
+            await asyncio.sleep(0.05)
+            pace.speed = 100000  # 600 match-s now take ~6 ms
+        t = asyncio.create_task(bump())
+        async for d in sources.replay(evs, pace):
+            out.append(d["index"])
+        await t
+        return out
+
+    assert asyncio.run(asyncio.wait_for(run(), 3)) == [0, 1]

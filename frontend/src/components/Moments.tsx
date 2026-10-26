@@ -118,6 +118,7 @@ export function OverlayLayer({
   palette,
   meta,
   t,
+  compact = false,
 }: {
   cards: MomentCard[];
   events: MatchEvent[];
@@ -126,7 +127,10 @@ export function OverlayLayer({
   palette: TeamPalette;
   meta: MatchMeta;
   t: Strings;
+  /** half-width pitch (a map is open beside it): no TV-size type */
+  compact?: boolean;
 }) {
+  const xl = (cls: string) => (compact ? "" : cls);
   const [shown, setShown] = useState<MomentCard | null>(null);
   const done = useRef(new Set<string>());
   const lastAt = useRef(-Infinity);
@@ -174,17 +178,17 @@ export function OverlayLayer({
           <div className="flex items-stretch overflow-hidden rounded-lg shadow-[var(--shadow)]">
             {!full && (
               <div
-                className="grid place-items-center px-3 text-2xl lg:px-4 lg:text-tv-md"
+                className={`grid place-items-center px-3 text-2xl ${xl("lg:px-4 lg:text-tv-md")}`}
                 style={{ background: shown.team_id ? palette[side] : "rgb(var(--accent))" }}
                 aria-hidden
               >
                 {kindOf(shown.kind).icon}
               </div>
             )}
-            <div className={`bg-bg/95 ${full ? "w-full px-4 py-3 xl:px-6 xl:py-6" : "px-3 py-2 xl:px-4 xl:py-3"}`}>
-              {full && <div className="text-3xl xl:text-tv-md">{kindOf(shown.kind).icon}</div>}
-              <div className={`font-semibold leading-tight ${full ? "text-base sm:text-xl xl:text-tv-md" : "text-sm sm:text-base xl:text-tv-sm"}`}>{shown.headline}</div>
-              {shown.body && <div className={`mt-1 text-muted ${full ? "text-sm sm:text-base xl:text-tv-sm" : "text-xs xl:text-lg"}`}>{shown.body}</div>}
+            <div className={`bg-bg/95 ${full ? `w-full px-4 py-3 ${xl("xl:px-6 xl:py-6")}` : `px-3 py-2 ${xl("xl:px-4 xl:py-3")}`}`}>
+              {full && <div className={`text-3xl ${xl("xl:text-tv-md")}`}>{kindOf(shown.kind).icon}</div>}
+              <div className={`font-semibold leading-tight ${full ? `text-base sm:text-xl ${xl("xl:text-tv-md")}` : `text-sm sm:text-base ${xl("xl:text-tv-sm")}`}`}>{shown.headline}</div>
+              {shown.body && <div className={`mt-1 text-muted ${full ? `text-sm sm:text-base ${xl("xl:text-tv-sm")}` : `text-xs ${xl("xl:text-lg")}`}`}>{shown.body}</div>}
               <div className="mt-1 text-2xs uppercase tracking-wider text-muted">
                 {shown.minute}′ · {shown.source === "agents" ? `✦ ${t.aiBadge}` : t.liveBadge}
               </div>

@@ -56,3 +56,10 @@ def test_react_ui_stream_gets_full_events_with_model_values():
         assert {"Card", "Substitution", "Half End", "Physical Update"} <= types
         assert shot_xg and all(0 < x < 1 for x in shot_xg)
         assert pass_diff and all(0 <= d <= 100 for d in pass_diff)
+
+
+def test_match_events_preview_is_cut_at_until():
+    with TestClient(app) as c:
+        events = c.get("/api/matches/7/events", params={"until": 1800}).json()
+    assert events and all(e["clock_s"] <= 1800 for e in events)
+    assert any(e["type"] == "Pass" and "team_id" in e for e in events)

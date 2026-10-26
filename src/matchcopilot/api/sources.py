@@ -20,12 +20,27 @@ log = logging.getLogger(__name__)
 FIRST_EVENT_TIMEOUT_S = float(os.getenv("EVENTHUB_TIMEOUT_S", "20"))
 
 
-async def replay(events, speed: float) -> AsyncIterator[dict]:
+class Pace:
+    """Replay speed that viewers can change while the match runs (shared by the broadcast)."""
+
+    def __init__(self, speed: float):
+        self.speed = float(speed)
+
+    def __float__(self) -> float:
+        return float(self.speed)
+
+
+async def replay(events, speed: "float | Pace") -> AsyncIterator[dict]:
     prev = None
     for e in events:
         d = e.model_dump(exclude_none=True) if hasattr(e, "model_dump") else e
-        if prev is not None and speed > 0:
-            await asyncio.sleep(max(0.0, (d["clock_s"] - prev) / speed))
+        if prev is not None and float(speed) > 0:
+            # sleep in short steps so a speed change applies within half a second
+            remaining = max(0.0, d["clock_s"] - prev)
+            while remaining > 0 and float(speed) > 0:
+                step = min(remaining, 0.5 * float(speed))
+                await asyncio.sleep(step / float(speed))
+                remaining -= step
         else:
             await asyncio.sleep(0)  # still yield to the loop so viewers get served
         prev = d["clock_s"]
@@ -37,7 +52,7 @@ def eventhub_enabled() -> bool:
                                                  or os.getenv("EVENTHUB_CONNECTION_STRING")))
 
 
-async def _eventhub_roundtrip(meta: dict, events, speed: float) -> AsyncIterator[dict]:
+async def _eventhub_roundtrip(meta: dict, events, speed: "float | Pace") -> AsyncIterator[dict]:
     from azure.eventhub import EventData
     from azure.eventhub.aio import EventHubConsumerClient, EventHubProducerClient
 
@@ -78,7 +93,7 @@ async def _eventhub_roundtrip(meta: dict, events, speed: float) -> AsyncIterator
     consume = asyncio.create_task(consumer.receive(on_event=on_event, starting_position=since))
     pub = asyncio.create_task(publish())
     # the SDK retries connection and auth errors forever, so a silent hub must not stall the match
-    gap = FIRST_EVENT_TIMEOUT_S + (120 / speed if speed > 0 else 0)
+    gap = FIRST_EVENT_TIMEOUT_S + (120 / float(speed) if float(speed) > 0 else 0)
     try:
         while True:
             try:
@@ -96,7 +111,7 @@ async def _eventhub_roundtrip(meta: dict, events, speed: float) -> AsyncIterator
         await consumer.close()
 
 
-async def event_source(meta: dict, events, speed: float) -> AsyncIterator[dict]:
+async def event_source(meta: dict, events, speed: "float | Pace") -> AsyncIterator[dict]:
     done = -1
     if eventhub_enabled():
         try:

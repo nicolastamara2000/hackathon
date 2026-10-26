@@ -127,7 +127,7 @@ export const MapLayer = memo(function MapLayer({ insight, layer, meta, events, n
   }
 
   if (layer === "zones") {
-    const cells = zoneControl(meta, events, now);
+    const cells = zoneControl(meta, events, now, Infinity); // events are already cut to the map window
     const w = (x(120) - x(0)) / ZONE_COLS, h = (y(80) - y(0)) / ZONE_ROWS;
     return (
       <g>

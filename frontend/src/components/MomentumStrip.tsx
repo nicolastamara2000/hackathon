@@ -6,7 +6,7 @@ import type { TeamPalette } from "../lib/teamColors";
 import type { KeyMoment, StatsSnapshot } from "../stats/engine";
 
 const FULL_PLAY_S = 97 * 60; // axis length until the match tells us otherwise
-const SPEEDS = [1, 2, 5, 20];
+const SPEEDS = [5, 10, 20, 40, 90];
 
 interface Props {
   meta: MatchMeta;
