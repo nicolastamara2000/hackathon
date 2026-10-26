@@ -14,6 +14,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 
 from .agents.crew import MatchContext, MatchCrew
 from .metrics.analyzer import MatchAnalyzer
+from .metrics.models import pass_difficulty, xg
 from .narration.cards import Card, card_from_insight
 
 log = logging.getLogger(__name__)
@@ -58,9 +59,13 @@ class MatchSession:
 
     async def ingest(self, event: dict) -> None:
         insights = self.analyzer.ingest(event)
-        await self._publish({"type": "event", "event": {k: event.get(k) for k in (
-            "index", "minute", "second", "clock_s", "type", "team_id", "player_name", "location",
-            "end_location", "outcome")}})
+        # the full schema.py event, plus the model values the broadcast UI shows
+        out = {k: v for k, v in event.items() if not k.startswith("_") and v is not None}
+        if out.get("type") == "Shot" and out.get("location"):
+            out["xg"] = round(xg(out), 3)
+        elif out.get("type") == "Pass" and out.get("end_location"):
+            out["pass_difficulty"] = pass_difficulty(out)
+        await self._publish({"type": "event", "event": out})
         for ins in insights:
             d = ins.to_dict()
             card = card_from_insight(d, self.match_id, self.teams)

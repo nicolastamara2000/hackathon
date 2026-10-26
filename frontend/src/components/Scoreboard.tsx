@@ -34,13 +34,13 @@ export function Scoreboard({ meta, stats, clock, isLive, ended, palette, t, onSt
   const wp = stats?.winProb ?? { home: 0.4, draw: 0.3, away: 0.3 };
   const periodLabel = ended ? t.ft : clock.period === 2 ? t.half2 : t.half1;
   return (
-    <header className="panel flex flex-col gap-3 px-4 py-3 lg:px-6">
-      <div className="flex items-center gap-3">
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 lg:gap-6">
+    <header className="panel flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:gap-8 lg:px-5">
+      <div className="flex items-center gap-3 lg:shrink-0">
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 lg:gap-4">
           <TeamName team={meta.home} side="home" reds={stats?.home.reds ?? 0} />
           <button
             onClick={() => onStat("score")}
-            className="num flex items-center gap-1 rounded px-1 text-tv-md leading-none lg:gap-2 lg:text-tv-lg"
+            className="num flex items-center gap-1 rounded px-1 text-tv-md leading-none lg:gap-2"
             aria-label={`Score ${h} ${a}`}
           >
             <Digit value={h} />
@@ -49,17 +49,19 @@ export function Scoreboard({ meta, stats, clock, isLive, ended, palette, t, onSt
           </button>
           <TeamName team={meta.away} side="away" reds={stats?.away.reds ?? 0} />
         </div>
-        <div className="flex shrink-0 flex-col items-end">
-          <div className="num text-tv-sm leading-none lg:text-tv-md">
+        <div className="flex shrink-0 flex-col items-end lg:ml-4 lg:items-start">
+          <div className="num text-tv-sm leading-none">
             {String(clock.minute).padStart(2, "0")}:{String(clock.second).padStart(2, "0")}
           </div>
-          <div className="mt-1 flex flex-col items-end gap-1 whitespace-nowrap text-xs text-muted sm:flex-row sm:items-center sm:gap-2">
+          <div className="mt-1 flex items-center gap-2 whitespace-nowrap text-xs text-muted">
             <span>{periodLabel}</span>
             <LivePill live={isLive && !ended} t={t} />
           </div>
         </div>
       </div>
-      <WinProbBar wp={wp} meta={meta} palette={palette} t={t} onClick={() => onStat("winProb")} />
+      <div className="min-w-0 flex-1">
+        <WinProbBar wp={wp} meta={meta} palette={palette} t={t} onClick={() => onStat("winProb")} />
+      </div>
     </header>
   );
 }
@@ -69,9 +71,9 @@ function TeamName({ team, side, reds }: { team: Team; side: "home" | "away"; red
     <div className={`flex min-w-0 items-center gap-2 ${side === "home" ? "flex-row-reverse justify-start text-right" : ""}`}>
       <Crest team={team} size={32} />
       <div className="min-w-0">
-        <div className="num truncate text-xl font-semibold uppercase leading-tight lg:text-tv-sm">
-          <span className="lg:hidden">{team.short_name}</span>
-          <span className="hidden lg:inline">{team.name}</span>
+        <div className="num truncate text-xl font-semibold uppercase leading-tight lg:text-2xl" title={team.name}>
+          <span className="2xl:hidden">{team.short_name}</span>
+          <span className="hidden 2xl:inline">{team.name}</span>
         </div>
         <div className={`flex items-center gap-1 ${side === "home" ? "justify-end" : ""}`}>
           <span className={`h-1 w-8 rounded-full ${side === "home" ? "bg-home" : "bg-away"}`} />

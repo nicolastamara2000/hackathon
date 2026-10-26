@@ -92,10 +92,32 @@ export interface MatchEvent {
   pass_difficulty?: number;
 }
 
-/** Messages on the live socket. Same envelope as the FastAPI SSE stream ("hello", "event"). */
+/** An overlay card as the backend's personalizer shapes it for this viewer (narration/personalize.py). */
+export interface MomentCard {
+  card_id: string;
+  version: number;
+  minute: number;
+  clock_s: number;
+  kind: string;
+  placement: "lower_third" | "side_panel" | "top_bar" | "full_screen";
+  duration_s: number;
+  team_id?: string | null;
+  player_id?: string | null;
+  player_name?: string | null;
+  source: "template" | "agents";
+  tags: string[];
+  your_team: boolean;
+  your_player: boolean;
+  headline: string;
+  body?: string | null;
+  metrics: Record<string, unknown>;
+}
+
+/** Messages on the live feed. Same envelope as the FastAPI SSE stream. */
 export type FeedMessage =
-  | { type: "hello"; meta: MatchMeta; speed: number }
+  | { type: "hello"; meta: MatchMeta; speed: number; agents?: boolean }
   | { type: "event"; event: MatchEvent }
+  | { type: "card"; card: MomentCard }
   | { type: "stats"; stats: import("../stats/engine").StatsSnapshot }
   | { type: "clock"; clock_s: number }
   | { type: "end" };

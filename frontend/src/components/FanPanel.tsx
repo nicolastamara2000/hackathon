@@ -1,8 +1,8 @@
+import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MatchMeta } from "../feed/types";
 import { fanLines, type Locale, type Strings } from "../i18n/strings";
-import type { KeyMoment, Side, StatsSnapshot } from "../stats/engine";
-import { momentLabel } from "./MomentumStrip";
+import type { Side, StatsSnapshot } from "../stats/engine";
 
 interface Props {
   meta: MatchMeta;
@@ -15,7 +15,7 @@ interface Props {
 const RECENT_S = 120; // a moment stays the headline for 2 minutes of play
 
 /** Low density: one sentence, one big number, emojis, big type. */
-export function FanPanel({ meta, stats, locale, t, onStat }: Props) {
+export const FanPanel = memo(function FanPanel({ meta, stats, locale, t, onStat }: Props) {
   const L = fanLines[locale];
   const team = (s: Side) => meta[s].name;
   const latest = [...stats.keyMoments].reverse().find((k) => k.kind === "goal" || k.kind === "big_chance" || k.kind === "red");
@@ -59,10 +59,9 @@ export function FanPanel({ meta, stats, locale, t, onStat }: Props) {
     }
   }
   const big = Math.round(stats.winProb[side] * 100);
-  const last3: KeyMoment[] = stats.keyMoments.filter((k) => k.kind !== "shot" && k.kind !== "half").slice(-3).reverse();
 
   return (
-    <div className="flex h-full flex-col gap-6 p-5">
+    <div className="flex flex-col gap-4 p-5">
       <AnimatePresence mode="wait">
         <motion.button
           key={line}
@@ -88,19 +87,6 @@ export function FanPanel({ meta, stats, locale, t, onStat }: Props) {
         </div>
       </button>
 
-      <div>
-        <h3 className="eyebrow mb-2">{t.lastMoments}</h3>
-        <ul className="space-y-2">
-          {last3.map((k) => (
-            <li key={k.id} className="flex items-baseline gap-3 text-lg">
-              <span className="num w-10 text-muted">{k.minute}′</span>
-              <span>
-                {momentLabel(k, t)} <span className="text-muted">{k.player?.split(" ").slice(-1)[0]}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
-}
+});

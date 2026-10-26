@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { connectFeed } from "../feed/connect";
 import type { FeedSocket } from "../feed/mockSocket";
-import type { MatchEvent, MatchMeta } from "../feed/types";
+import type { MatchEvent, MatchMeta, MomentCard } from "../feed/types";
 import { computeStats, type StatsSnapshot } from "../stats/engine";
 import { clockAt, findBreaks, playTime, type Breaks } from "../stats/time";
 
@@ -25,14 +24,27 @@ export interface MatchFeed {
   stats: StatsSnapshot | null;
   /** newest stats object pushed by the feed (full match so far) */
   liveStats: StatsSnapshot | null;
+  /** AI / template moments for this viewer, oldest first, latest version of each */
+  cards: MomentCard[];
+  /** true when the backend runs the agent crew (cards upgrade to AI text) */
+  agents: boolean;
+  connected: boolean;
   setSpeed(s: number): void;
   seekPlay(play_s: number): void;
   seekClock(clock_s: number): void;
   goLive(): void;
 }
 
-export function useMatchFeed(initialSpeed = 20): MatchFeed {
+/**
+ * One live feed for the whole screen. `connect` opens it (real SSE or the mock);
+ * a new `feedKey` (other match, mode or language) reconnects and replays history.
+ */
+export function useMatchFeed(connect: (() => Promise<FeedSocket>) | null, feedKey: string, initialSpeed = 20): MatchFeed {
   const [meta, setMeta] = useState<MatchMeta | null>(null);
+  const cardsRef = useRef(new Map<string, MomentCard>());
+  const [cards, setCards] = useState<MomentCard[]>([]);
+  const [agents, setAgents] = useState(false);
+  const [connected, setConnected] = useState(false);
   const eventsRef = useRef<MatchEvent[]>([]);
   const [version, setVersion] = useState(0);
   const [liveStats, setLiveStats] = useState<StatsSnapshot | null>(null);
@@ -49,16 +61,43 @@ export function useMatchFeed(initialSpeed = 20): MatchFeed {
   const liveRef = useRef(true);
 
   useEffect(() => {
+    if (!connect) return;
     let alive = true;
     let pending = false;
-    connectFeed(initialSpeed).then((s) => {
+    const reset = () => {
+      eventsRef.current = [];
+      cardsRef.current = new Map();
+      setCards([]);
+      setLiveStats(null);
+      setEnded(false);
+      feedClock.current = { clock: 0, at: performance.now() };
+      liveRef.current = true;
+      setIsLive(true);
+      setVersion((v) => v + 1);
+    };
+    reset();
+    setConnected(false);
+    connect().then((s) => {
       if (!alive) return s.close();
       sock.current = s;
       s.onmessage = (m) => {
         switch (m.type) {
           case "hello":
+            reset();
             setMeta(m.meta);
+            setAgents(Boolean(m.agents));
+            setConnected(true);
+            speedRef.current = m.speed;
+            setSpeedState(m.speed);
             break;
+          case "card": {
+            const prev = cardsRef.current.get(m.card.card_id);
+            if (!prev || prev.version <= m.card.version) {
+              cardsRef.current.set(m.card.card_id, m.card);
+              setCards([...cardsRef.current.values()].sort((a, b) => a.clock_s - b.clock_s));
+            }
+            break;
+          }
           case "event":
             eventsRef.current.push(m.event);
             if (!pending) {
@@ -85,8 +124,10 @@ export function useMatchFeed(initialSpeed = 20): MatchFeed {
     return () => {
       alive = false;
       sock.current?.close();
+      sock.current = null;
     };
-  }, [initialSpeed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedKey]);
 
   // one clock for the whole screen
   useEffect(() => {
@@ -94,7 +135,7 @@ export function useMatchFeed(initialSpeed = 20): MatchFeed {
     let lastUi = 0;
     const loop = (now: number) => {
       const f = feedClock.current;
-      const head = f.clock + Math.min(1, (now - f.at) / 1000) * speedRef.current;
+      const head = f.clock + Math.min(3, (now - f.at) / 1000) * speedRef.current; // keep ticking through quiet spells (goal celebrations)
       let c: number;
       if (liveRef.current) c = Math.max(0, head - DISPLAY_LAG_S);
       else {
@@ -168,6 +209,9 @@ export function useMatchFeed(initialSpeed = 20): MatchFeed {
     speed,
     stats,
     liveStats,
+    cards,
+    agents,
+    connected,
     setSpeed,
     seekPlay,
     seekClock,

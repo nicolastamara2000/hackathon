@@ -6,7 +6,7 @@ import type { TeamPalette } from "../lib/teamColors";
 import type { KeyMoment, StatsSnapshot } from "../stats/engine";
 
 const FULL_PLAY_S = 97 * 60; // axis length until the match tells us otherwise
-const SPEEDS = [1, 10, 20, 60];
+const SPEEDS = [1, 2, 5, 20];
 
 interface Props {
   meta: MatchMeta;
@@ -23,7 +23,8 @@ interface Props {
   t: Strings;
   onSeek(play_s: number): void;
   onLive(): void;
-  onSpeed(s: number): void;
+  /** offered only when the feed can change speed (the offline demo) */
+  onSpeed?(s: number): void;
 }
 
 /**
@@ -69,8 +70,8 @@ export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, is
         <Legend color={palette.home} label={`${meta.home.short_name} ▲`} />
         <Legend color={palette.away} label={`${meta.away.short_name} ▼`} />
         <div className="ml-auto flex items-center gap-2">
-          <span className="eyebrow hidden sm:inline">{t.speed}</span>
-          <div className="flex overflow-hidden rounded-sm ring-1 ring-line" role="group" aria-label={t.speed}>
+          {onSpeed && <span className="eyebrow hidden sm:inline">{t.speed}</span>}
+          {onSpeed && <div className="flex overflow-hidden rounded-sm ring-1 ring-line" role="group" aria-label={t.speed}>
             {SPEEDS.map((s) => (
               <button
                 key={s}
@@ -81,7 +82,7 @@ export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, is
                 {s}×
               </button>
             ))}
-          </div>
+          </div>}
           <button
             onClick={onLive}
             disabled={isLive}
