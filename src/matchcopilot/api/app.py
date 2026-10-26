@@ -35,6 +35,9 @@ FIXTURES = [7, 21, 33, 8, 9]
 DEFAULT_SPEED = float(os.getenv("REPLAY_SPEED", "20"))
 WEB_DIR = next((d for d in (Path(os.getenv("WEB_DIR", "web")).resolve(),
                              Path(__file__).resolve().parents[3] / "web") if d.exists()), Path("web"))
+# React broadcast UI (frontend/, built with `npm run build`), served under /app
+FRONTEND_DIR = next((d for d in (Path(os.getenv("FRONTEND_DIR", "frontend/dist")).resolve(),
+                                  Path(__file__).resolve().parents[3] / "frontend" / "dist") if d.exists()), None)
 PITCH_EVENTS = {"Pass", "Carry", "Shot", "Dribble", "Kick Off", "Interception", "Ball Recovery", "Tackle"}
 
 
@@ -183,3 +186,7 @@ if WEB_DIR.exists():
     @app.get("/")
     async def index():
         return FileResponse(WEB_DIR / "index.html")
+
+
+if FRONTEND_DIR is not None:
+    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="app")

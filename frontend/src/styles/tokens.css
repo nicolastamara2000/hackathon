@@ -1,0 +1,61 @@
+/*
+ * Design tokens. Every color is an "R G B" triplet so Tailwind can add alpha
+ * (bg-surface/80). Palette: Okabe-Ito for data states (color-blind safe), checked
+ * at >= 4.5:1 for text on its surface. Team colors are injected at runtime from
+ * the match config (lib/teamColors.ts) after a contrast fix.
+ */
+:root,
+[data-theme="dark"] {
+  --bg: 11 15 20;          /* #0B0F14 page */
+  --surface: 18 24 33;     /* #121821 panels */
+  --raised: 26 34 48;      /* #1A2230 cards, hovers */
+  --line: 39 49 66;        /* #273142 hairlines */
+  --ink: 242 245 248;      /* #F2F5F8 text, 16.9:1 on surface */
+  --muted: 154 167 184;    /* #9AA7B8 secondary text, 7.4:1 on surface */
+  --accent: 86 180 233;    /* #56B4E9 sky blue: focus, selection, links */
+  --live: 255 92 92;       /* #FF5C5C live dot / LIVE text */
+  --good: 0 158 115;       /* #009E73 easy / positive */
+  --warn: 230 159 0;       /* #E69F00 medium / caution */
+  --bad: 213 94 0;         /* #D55E00 hard / negative */
+  --pitch: 15 54 39;       /* #0F3627 broadcast pitch */
+  --pitch-stripe: 18 62 45;
+  --pitch-line: 255 255 255;
+  --home: 200 16 46;       /* overwritten per match */
+  --away: 138 155 168;     /* overwritten per match */
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: 244 246 249;
+  --surface: 255 255 255;
+  --raised: 236 240 245;
+  --line: 214 221 230;
+  --ink: 11 15 20;
+  --muted: 74 85 104;      /* #4A5568, 7.5:1 on white */
+  --accent: 0 114 178;     /* #0072B2 */
+  --live: 196 30 58;
+  --good: 0 128 94;
+  --warn: 176 118 0;
+  --bad: 184 74 0;
+  --pitch: 38 110 70;
+  --pitch-stripe: 42 120 77;
+  --pitch-line: 255 255 255;
+  --shadow: 0 8px 24px rgb(15 23 42 / 0.15);
+  color-scheme: light;
+}
+
+:root {
+  /* spacing: 4 px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  /* motion: overlays slide in 300 ms, fade out 200 ms */
+  --motion-in: 300ms;
+  --motion-out: 200ms;
+  --ease-broadcast: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

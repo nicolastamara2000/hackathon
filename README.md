@@ -14,6 +14,22 @@ Built for the Microsoft x Premier League hackathon.
 | Live API (FastAPI, Server-Sent Events) + overlay web UI | Done |
 | Azure infra (Bicep + azd): Container Apps, Event Hubs, Cosmos DB, managed identity | Done |
 
+## Broadcast UI (React)
+
+`frontend/` is the new broadcast-style app: Live Match View with a D3 pitch, win probability,
+momentum wave and scrubbable timeline, Analyst and Fan modes, EN / ES, dark and light themes.
+It replays a generated match until it is wired to the live socket. Design notes: `frontend/DESIGN.md`.
+
+Run it locally (PowerShell, Node 22):
+
+```powershell
+cd frontend
+npm install
+npm run dev        # http://localhost:5173/app/
+```
+
+The Docker image builds it and FastAPI serves it at `/app` (the classic UI stays at `/`).
+
 ## Architecture
 
 ```
