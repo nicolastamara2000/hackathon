@@ -14,6 +14,8 @@ import { LAYERS, layerForMetric, type Layer } from "./pitch/layers";
 import { TPCard, TPFanLine, TPTimeline } from "./components/TurningPoints";
 import { EventFeed } from "./components/EventFeed";
 import { MatchStory } from "./components/MatchStory";
+import { AIPlayerReportCard } from "./components/AIWriter";
+import { playerFacts } from "./stats/aiFacts";
 import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
@@ -470,6 +472,14 @@ function Live({
               </select>
             </label>
             <PlayerPanel meta={meta} events={feed.events} clock={Math.floor(feed.clock)} playerId={playerId} palette={palette} t={t} onJump={jump} />
+            <div className="px-4 pb-4">
+              <AIPlayerReportCard
+                facts={() => playerFacts(meta, feed.events, feed.clock, clock.minute, playerId, tps, choices.locale)}
+                minute={clock.minute}
+                locale={choices.locale}
+                resetKey={`${meta.match_id}|${playerId}`}
+              />
+            </div>
             <div className="border-t border-line">
               <TurningPanel
                 tps={tps.filter((x) => x.side === (meta.home.lineup.concat(meta.home.bench).some((p) => p.id === playerId) ? "home" : "away"))}

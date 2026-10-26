@@ -4,10 +4,12 @@ import type { Locale } from "../i18n/strings";
 import { tpText } from "../i18n/turning";
 import type { TeamPalette } from "../lib/teamColors";
 import { computeStats, type Side, type StatsSnapshot } from "../stats/engine";
-import { xT } from "../stats/geometry";
 import { findBreaks } from "../stats/time";
 import type { TurningPoint } from "../stats/turning";
 import { TP_ICON } from "./TurningPoints";
+import { influence } from "../stats/influence";
+import { AIStoryCard } from "./AIWriter";
+import { storyFacts } from "../stats/aiFacts";
 
 /**
  * AI Match Story, built only from verified numbers: the stats snapshot, the
@@ -30,37 +32,6 @@ interface Chapter {
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const x2 = (v: number) => v.toFixed(2);
-
-function influence(meta: MatchMeta, events: MatchEvent[]) {
-  const m = new Map<string, { id: string; name: string; side: Side; xt: number; xg: number; rec: number; ids: string[] }>();
-  for (const e of events) {
-    if (!e.player_id || !e.team_id) continue;
-    const side: Side = e.team_id === meta.home.id ? "home" : "away";
-    const p = m.get(e.player_id) ?? { id: e.player_id, name: e.player_name ?? "", side, xt: 0, xg: 0, rec: 0, ids: [] };
-    let hit = false;
-    if (((e.type === "Pass" && e.outcome === "Complete") || e.type === "Carry") && e.location && e.end_location) {
-      const d = Math.max(0, xT(e.end_location) - xT(e.location));
-      if (d > 0.01) {
-        p.xt += d;
-        hit = true;
-      }
-    }
-    if (e.type === "Shot") {
-      p.xg += e.xg ?? 0;
-      hit = true;
-    }
-    if ((e.type === "Ball Recovery" || e.type === "Interception" || e.type === "Tackle") && e.location && e.location[0] >= 60) {
-      p.rec++;
-      hit = true;
-    }
-    if (hit) p.ids.push(e.id);
-    m.set(e.player_id, p);
-  }
-  // custom index, labelled as such in the UI: threat created + chance quality + high ball wins
-  return [...m.values()]
-    .map((p) => ({ ...p, score: p.xt + p.xg + 0.05 * p.rec }))
-    .sort((a, b) => b.score - a.score);
-}
 
 export const MatchStory = memo(function MatchStory({
   meta, events, clock, stats, tps, ended, palette, locale, onJump, onTurning,
@@ -201,6 +172,7 @@ export const MatchStory = memo(function MatchStory({
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
+      <AIStoryCard facts={() => storyFacts(meta, events, clock, stats, tps, ended, locale)} minute={stats.minute} locale={locale} resetKey={meta.match_id} />
       <section>
         <h3 className="eyebrow mb-2">{L.summary}</h3>
         <div className="flex flex-col gap-2 text-base">

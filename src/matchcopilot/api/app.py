@@ -6,7 +6,9 @@ not once per viewer). Each viewer's stream is shaped by their profile.
     GET  /api/matches                         fixtures available to broadcast
     GET  /api/matches/{seed}                  match metadata (clubs, lineups)
     POST /api/live/{seed}/start?speed=30      start (or restart) a broadcast
+    GET  /api/matches/{seed}/events?until=1800 events of a match (landing preview)
     POST /api/live/{seed}/speed?speed=60      change the speed of a running broadcast
+    POST /api/ai/story, /api/ai/player-report  long-form text from Foundry agents, over client facts
     GET  /api/live/{seed}/stream?mode=fan&lang=es&team=HCF&player=HCF-9&metric=xg&events=true
     GET  /api/live/{seed}/cards               every card so far, machine-readable
 
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -27,12 +30,15 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from ..agents.crew import make_client
+from ..agents.writers import WriteRequest, Writers
 from ..generator.engine import generate_match
 from ..narration.cards import Card
 from ..narration.personalize import ViewerProfile, view
 from ..session import MatchSession
 from .sources import Pace, event_source, eventhub_enabled
 from .store import make_store
+
+log = logging.getLogger(__name__)
 
 FIXTURES = [7, 21, 33, 8, 9]
 DEFAULT_SPEED = float(os.getenv("REPLAY_SPEED", "20"))
@@ -68,6 +74,7 @@ class Hub:
     def __init__(self):
         self.live: dict[int, Broadcast] = {}
         self.client = make_client()
+        self.writers = Writers(self.client) if self.client else None
         self.store = make_store()
 
     def start(self, seed: int, speed: float, restart: bool = False) -> Broadcast:
@@ -139,6 +146,31 @@ async def match_events(seed: int, until: float | None = Query(None, ge=0)):
     """Events of a match up to `until` (match clock seconds): the landing page previews the opening phase."""
     _, events = generate_match(seed)
     return [e.model_dump(exclude_none=True) for e in events if until is None or e.clock_s <= until]
+
+
+async def _write(req: WriteRequest, kind: str):
+    if hub.writers is None:
+        raise HTTPException(503, "AI writer not configured")
+    if len(json.dumps(req.facts)) > 60_000:
+        raise HTTPException(413, "facts too large")
+    try:
+        write = hub.writers.story if kind == "story" else hub.writers.player_report
+        return {"source": "agents", **(await write(req.facts, req.lang))}
+    except Exception as exc:  # timeout, model error, failed fact check: the UI keeps the rule-based text
+        log.warning("%s writer failed: %r", kind, exc)
+        raise HTTPException(502, "AI writer failed") from exc
+
+
+@app.post("/api/ai/story")
+async def ai_story(req: WriteRequest):
+    """Match story written by the Foundry story agent from verified facts computed by the client."""
+    return await _write(req, "story")
+
+
+@app.post("/api/ai/player-report")
+async def ai_player_report(req: WriteRequest):
+    """One-match player report written by the Foundry scout agent from verified facts."""
+    return await _write(req, "player")
 
 
 @app.post("/api/live/{seed}/start")
