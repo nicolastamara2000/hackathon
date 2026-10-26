@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { MatchEvent, MatchMeta } from "../feed/types";
 import type { Strings } from "../i18n/strings";
@@ -20,7 +21,7 @@ const int = (v: number | null) => (v === null ? "–" : String(Math.round(v)));
 const share = (h: number, a: number) => (h + a > 0 ? h / (h + a) : 0.5);
 
 /** High density: every number, raw values, two standard charts, JSON export. */
-export function AnalystPanel({ meta, stats, events, palette, t, onStat }: Props) {
+export const AnalystPanel = memo(function AnalystPanel({ meta, stats, events, palette, t, onStat }: Props) {
   const H = stats.home, A = stats.away;
   const name = (s: Side | null) => (s ? meta[s].short_name : "");
   const caption =
@@ -181,7 +182,7 @@ export function AnalystPanel({ meta, stats, events, palette, t, onStat }: Props)
       </Section>
     </div>
   );
-}
+});
 
 function ChartTip({ active, payload, label, fmt }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: number; fmt(v: number): string }) {
   if (!active || !payload?.length) return null;

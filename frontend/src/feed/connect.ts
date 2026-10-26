@@ -1,30 +1,13 @@
 import { MockMatchSocket, type FeedSocket } from "./mockSocket";
-import type { FeedMessage, MatchEvent, MatchMeta } from "./types";
+import type { MatchEvent, MatchMeta } from "./types";
 
-/**
- * Opens the live feed. Set VITE_FEED_URL (ws://...) to use a real socket that
- * sends the same JSON messages; otherwise the bundled synthetic match is replayed.
- */
-export async function connectFeed(speed: number): Promise<FeedSocket> {
-  const url = import.meta.env.VITE_FEED_URL as string | undefined;
-  if (url) return new RemoteSocket(url);
+/** The bundled match (generator seed 7), for the offline demo when the backend is not reachable. */
+export async function loadDemoMatch(): Promise<{ meta: MatchMeta; events: MatchEvent[] }> {
   const { default: data } = await import("../mock/data/match-7.json");
-  const { meta, events } = data as unknown as { meta: MatchMeta; events: MatchEvent[] };
-  return new MockMatchSocket(meta, events, speed);
+  return data as unknown as { meta: MatchMeta; events: MatchEvent[] };
 }
 
-class RemoteSocket implements FeedSocket {
-  onmessage: ((m: FeedMessage) => void) | null = null;
-  private ws: WebSocket;
-  constructor(url: string) {
-    this.ws = new WebSocket(url);
-    this.ws.onmessage = (ev) => this.onmessage?.(JSON.parse(ev.data) as FeedMessage);
-  }
-  start() {}
-  setSpeed(speed: number) {
-    this.ws.send(JSON.stringify({ type: "speed", speed }));
-  }
-  close() {
-    this.ws.close();
-  }
+export async function connectDemo(speed: number): Promise<FeedSocket> {
+  const { meta, events } = await loadDemoMatch();
+  return new MockMatchSocket(meta, events, speed);
 }

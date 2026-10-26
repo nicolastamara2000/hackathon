@@ -6,8 +6,10 @@ not once per viewer). Each viewer's stream is shaped by their profile.
     GET  /api/matches                         fixtures available to broadcast
     GET  /api/matches/{seed}                  match metadata (clubs, lineups)
     POST /api/live/{seed}/start?speed=30      start (or restart) a broadcast
-    GET  /api/live/{seed}/stream?mode=fan&lang=es&team=HCF&player=HCF-9&metric=xg
+    GET  /api/live/{seed}/stream?mode=fan&lang=es&team=HCF&player=HCF-9&metric=xg&events=true
     GET  /api/live/{seed}/cards               every card so far, machine-readable
+
+    GET  /         React broadcast UI (frontend/dist)     GET  /classic   the first web UI
 """
 
 from __future__ import annotations
@@ -35,7 +37,7 @@ FIXTURES = [7, 21, 33, 8, 9]
 DEFAULT_SPEED = float(os.getenv("REPLAY_SPEED", "20"))
 WEB_DIR = next((d for d in (Path(os.getenv("WEB_DIR", "web")).resolve(),
                              Path(__file__).resolve().parents[3] / "web") if d.exists()), Path("web"))
-# React broadcast UI (frontend/, built with `npm run build`), served under /app
+# React broadcast UI (frontend/, built with `npm run build`), served at / (classic UI at /classic)
 FRONTEND_DIR = next((d for d in (Path(os.getenv("FRONTEND_DIR", "frontend/dist")).resolve(),
                                   Path(__file__).resolve().parents[3] / "frontend" / "dist") if d.exists()), None)
 PITCH_EVENTS = {"Pass", "Carry", "Shot", "Dribble", "Kick Off", "Interception", "Ball Recovery", "Tackle"}
@@ -55,8 +57,6 @@ class Broadcast:
         self.task = asyncio.create_task(self.session.run(event_source(self.meta, self.events, speed)))
 
     async def _fanout(self, msg: dict) -> None:
-        if msg["type"] == "event" and msg["event"]["type"] not in PITCH_EVENTS:
-            return
         self.backlog.append(msg)
         for q in list(self.queues):
             q.put_nowait(msg)
@@ -93,11 +93,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Match Co-pilot", version="0.1.0", lifespan=lifespan)
 
 
-def _render(msg: dict, profile: ViewerProfile) -> dict | None:
+def _render(msg: dict, profile: ViewerProfile, all_events: bool = False) -> dict | None:
+    """`all_events` (the React UI) gets every event type; the classic UI only on-ball ones."""
     if msg["type"] == "card":
         v = view(msg["card"], profile)
         return {"type": "card", "card": v} if v else None
     if msg["type"] == "event":
+        if not all_events and msg["event"]["type"] not in PITCH_EVENTS:
+            return None
         return {"type": "event", "event": msg["event"]}
     return msg
 
@@ -146,7 +149,7 @@ async def cards(seed: int):
 @app.get("/api/live/{seed}/stream")
 async def stream(request: Request, seed: int, mode: str = "fan", lang: str = "en",
                  team: str | None = None, player: str | None = None, metric: str | None = None,
-                 speed: float = DEFAULT_SPEED, history: bool = Query(True)):
+                 speed: float = DEFAULT_SPEED, history: bool = Query(True), events: bool = Query(False)):
     profile = ViewerProfile(mode=mode, lang=lang, favorite_team=team or None,
                             favorite_player=player or None, metric=metric or None)
     b = hub.start(seed, speed)
@@ -159,7 +162,7 @@ async def stream(request: Request, seed: int, mode: str = "fan", lang: str = "en
                         "agents": hub.client is not None})
             if history:
                 for msg in list(b.backlog):
-                    if (r := _render(msg, profile)) and msg["type"] != "event":
+                    if (r := _render(msg, profile, events)) and (events or msg["type"] != "event"):
                         yield _sse(r)
             while True:
                 if await request.is_disconnected():
@@ -169,7 +172,7 @@ async def stream(request: Request, seed: int, mode: str = "fan", lang: str = "en
                 except TimeoutError:
                     yield ": keep-alive\n\n"
                     continue
-                if (r := _render(msg, profile)) is not None:
+                if (r := _render(msg, profile, events)) is not None:
                     yield _sse(r)
                 if msg["type"] == "end":
                     break
@@ -183,10 +186,16 @@ async def stream(request: Request, seed: int, mode: str = "fan", lang: str = "en
 if WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
-    @app.get("/")
-    async def index():
+    @app.get("/classic")
+    async def classic():
         return FileResponse(WEB_DIR / "index.html")
+
+    if FRONTEND_DIR is None:
+        @app.get("/")
+        async def index():
+            return FileResponse(WEB_DIR / "index.html")
 
 
 if FRONTEND_DIR is not None:
-    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="app")
+    # the React broadcast UI is the main page; mounted last so /api routes win
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="app")

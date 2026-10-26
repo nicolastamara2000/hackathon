@@ -18,15 +18,19 @@ export const speedColor = d3
   .clamp(true);
 
 const surname = (name: string) => name.split(" ").slice(-1)[0].toUpperCase();
+/** Approximate label width for Inter semibold caps. */
+const labelW = (text: string, font: number) => text.length * font * 0.66;
 
 interface Props {
   feed: MatchFeed;
   palette: TeamPalette;
   t: Strings;
   focusPlayerId?: string;
+  /** overlays, drawn inside the pitch box */
+  children?: React.ReactNode;
 }
 
-export function Pitch({ feed, palette, t, focusPlayerId }: Props) {
+export function Pitch({ feed, palette, t, focusPlayerId, children }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const dyn = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 800 / ASPECT });
@@ -165,17 +169,14 @@ export function Pitch({ feed, palette, t, focusPlayerId }: Props) {
         .attr("font-weight", 600)
         .attr("fill", "#F2F5F8")
         .text((d) => `${d.player.number} ${surname(d.player.name)}`);
-      tag.each(function () {
-        const txt = d3.select(this).select<SVGTextElement>("text").node()!;
-        const bb = txt.getBBox();
-        d3.select(this)
-          .select("rect")
-          .attr("x", bb.x - 5)
-          .attr("y", bb.y - 2)
-          .attr("width", bb.width + 10)
-          .attr("height", bb.height + 4)
-          .attr("fill", "rgb(11 15 20 / 0.82)");
-      });
+      // sized from the label length: getBBox on every frame forces a layout and drops frames
+      tag
+        .select("rect")
+        .attr("x", (d) => -labelW(`${d.player.number} ${surname(d.player.name)}`, font) / 2 - 5)
+        .attr("y", -r - font * 1.55)
+        .attr("width", (d) => labelW(`${d.player.number} ${surname(d.player.name)}`, font) + 10)
+        .attr("height", font * 1.3)
+        .attr("fill", "rgb(11 15 20 / 0.82)");
       const sp = sel.select<SVGGElement>("g.sprint").attr("display", (d) => (sprint && d.player.id === sprint.id ? null : "none"));
       sp.select<SVGTextElement>("text")
         .attr("y", r + font * 0.95)
@@ -183,18 +184,13 @@ export function Pitch({ feed, palette, t, focusPlayerId }: Props) {
         .attr("font-weight", 700)
         .attr("fill", "#0B0F14")
         .text(sprint ? `⚡ ${Math.round(sprint.kmh)} km/h` : "");
-      sp.each(function () {
-        const txt = d3.select(this).select<SVGTextElement>("text").node()!;
-        if (!txt.textContent) return;
-        const bb = txt.getBBox();
-        d3.select(this)
-          .select("rect")
-          .attr("x", bb.x - 4)
-          .attr("y", bb.y - 1)
-          .attr("width", bb.width + 8)
-          .attr("height", bb.height + 2)
-          .attr("fill", "#F0E442");
-      });
+      const spW = sprint ? labelW(`⚡ ${Math.round(sprint.kmh)} km/h`, font * 0.9) + 8 : 0;
+      sp.select("rect")
+        .attr("x", -spW / 2)
+        .attr("y", r + font * 0.35)
+        .attr("width", spW)
+        .attr("height", font * 1.15)
+        .attr("fill", "#F0E442");
 
       // ball + speed trail (color and width both encode speed)
       if (b) {
@@ -281,6 +277,7 @@ export function Pitch({ feed, palette, t, focusPlayerId }: Props) {
         )}
       </svg>
       <SpeedLegend label={t.ballSpeed} />
+      {children}
       </div>
     </div>
   );
