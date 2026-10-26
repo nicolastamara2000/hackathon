@@ -11,16 +11,21 @@ import { SourceDrawer } from "./components/SourceDrawer";
 import { Spotlight } from "./components/Spotlight";
 import { KIND } from "./components/Moments";
 import { LAYERS, layerForMetric, type Layer } from "./pitch/layers";
+import { TPCard, TPFanLine, TPTimeline } from "./components/TurningPoints";
+import { EventFeed } from "./components/EventFeed";
+import { MatchStory } from "./components/MatchStory";
+import { tpText } from "./i18n/turning";
+import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
 import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
-import type { MatchMeta, MomentCard } from "./feed/types";
+import type { MatchEvent, MatchMeta, MomentCard } from "./feed/types";
 import { STRINGS, type Locale } from "./i18n/strings";
 import { applyTeamColors, type TeamPalette } from "./lib/teamColors";
 import { useMatchFeed } from "./state/useMatchFeed";
 import { playTime, type Breaks } from "./stats/time";
 
 type Theme = "dark" | "light";
-type Tab = "moments" | "stats";
+type Tab = "turning" | "story" | "events" | "stats" | "moments";
 
 const PALETTE_FALLBACK: TeamPalette = { home: "rgb(var(--home))", away: "rgb(var(--away))", onHome: "#fff", onAway: "#0B0F14" };
 const DEFAULTS: Choices = { seed: 7, mode: "fan", team: "", player: "", locale: "en", metric: "", speed: 20 };
@@ -150,11 +155,12 @@ function Live({
   theme: Theme;
   t: (typeof STRINGS)["en"];
 }) {
-  const [tab, setTab] = useState<Tab>("stats");
+  const [tab, setTab] = useState<Tab>("turning");
+  const [tpId, setTpId] = useState<string | null>(null);
   const defaultLayer: Layer = choices.mode === "player" ? "touches" : layerForMetric(choices.metric);
   const [layer, setLayer] = useState<Layer>(defaultLayer);
   const [mapSide, setMapSide] = useState<"home" | "away" | undefined>(undefined);
-  useEffect(() => setLayer(defaultLayer), [defaultLayer]);
+  useEffect(() => setLayer(defaultLayer), [defaultLayer, choices.mode]);
   const [statKey, setStatKey] = useState<string | null>(null);
   const [palette, setPalette] = useState<TeamPalette>(PALETTE_FALLBACK);
   const [slow, setSlow] = useState(false);
@@ -179,6 +185,14 @@ function Live({
   const onStat = useCallback((k: string) => setStatKey(k), []);
   const { seekClock } = feed;
   const jump = useCallback((c: number) => seekClock(Math.max(0, c)), [seekClock]);
+  // the engine re-runs every 5 s of match clock (and on every scrub): the timeline always matches the playhead
+  const tick = Math.floor(feed.clock / 5);
+  const tps = useMemo(() => (meta ? turningPoints(meta, feed.events, feed.clock) : []), [meta, feed.version, tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const selectedTp = tps.find((x) => x.id === tpId) ?? null;
+  const showTp = useCallback((tp: TurningPoint) => {
+    setTpId(tp.id);
+    setLayer("insight");
+  }, []);
 
   if (!meta)
     return (
@@ -208,7 +222,7 @@ function Live({
   const pitch = (withLayers: boolean) => (
     <>
       {withLayers && (
-        <LayerBar layer={layer} setLayer={setLayer} side={mapSide} setSide={mode === "player" ? undefined : setMapSide} meta={meta} t={t} />
+        <LayerBar layer={layer} setLayer={setLayer} side={mapSide} setSide={mode === "player" ? undefined : setMapSide} meta={meta} t={t} hasInsight={!!selectedTp} />
       )}
       <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
         <Pitch
@@ -216,7 +230,8 @@ function Live({
           palette={palette}
           t={t}
           focusPlayerId={playerId || undefined}
-          layer={withLayers ? layer : "live"}
+          layer={withLayers || (layer === "insight" && selectedTp) ? layer : "live"}
+          insight={selectedTp}
           filter={mode === "player" ? { playerId } : { side: mapSide }}
           onPick={jump}
         >
@@ -241,6 +256,17 @@ function Live({
       onSeek={feed.seekPlay}
       onLive={feed.goLive}
       onSpeed={offline ? feed.setSpeed : undefined}
+      turning={tps
+        .filter((x) => x.impact !== "low")
+        .map((x) => ({ id: x.id, play_s: x.play_s, side: x.side, impact: x.impact, minute: x.minute, label: tpText(x, meta, choices.locale).headline }))}
+      selectedTurning={tpId}
+      onTurning={(id) => {
+        const tp = tps.find((x) => x.id === id);
+        if (tp) {
+          showTp(tp);
+          setTab("turning");
+        }
+      }}
     />
   );
   const spotlight = (simple: boolean) =>
@@ -274,6 +300,13 @@ function Live({
           <aside className="panel flex min-h-0 flex-col overflow-y-auto">
             {offlineNote}
             {stats && <FanPanel meta={meta} stats={stats} locale={choices.locale} t={t} onStat={onStat} />}
+            <TPFanLine
+              tp={[...tps].reverse().find((x) => x.impact !== "low" && x.status !== "faded")}
+              meta={meta}
+              locale={choices.locale}
+              palette={palette}
+              onShow={(tp) => (selectedTp?.id === tp.id && layer === "insight" ? setLayer("live") : showTp(tp))}
+            />
             {spotlight(true)}
           </aside>
         </main>
@@ -289,20 +322,54 @@ function Live({
           <aside className="panel flex min-h-[420px] flex-col overflow-hidden lg:min-h-0">
             {offlineNote}
             <div className="flex border-b border-line" role="tablist">
-              {(["stats", "moments"] as Tab[]).map((k) => (
+              {(["turning", "story", "events", "stats", "moments"] as Tab[]).map((k) => (
                 <button
                   key={k}
                   role="tab"
                   aria-selected={tab === k}
                   onClick={() => setTab(k)}
-                  className={`flex-1 py-2.5 text-sm font-semibold ${tab === k ? "border-b-2 border-accent text-ink" : "text-muted hover:text-ink"}`}
+                  className={`flex-auto whitespace-nowrap px-2 py-2.5 text-xs font-semibold sm:text-sm ${tab === k ? "border-b-2 border-accent text-ink" : "text-muted hover:text-ink"}`}
                 >
-                  {k === "moments" ? `${t.moments} · ${feed.cards.length}` : t.stats}
+                  {k === "moments" ? t.moments : k === "turning" ? `◆ ${t.turningTab}` : k === "events" ? t.eventsTab : k === "story" ? t.storyTab : t.stats}
                 </button>
               ))}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
-              {tab === "stats" ? (
+              {tab === "turning" ? (
+                <TurningPanel tps={tps} selected={selectedTp} onSelect={showTp} meta={meta} events={feed.events} palette={palette} locale={choices.locale} onJump={jump} />
+              ) : tab === "story" ? (
+                stats && (
+                  <MatchStory
+                    meta={meta}
+                    events={feed.events}
+                    clock={feed.clock}
+                    stats={stats}
+                    tps={tps}
+                    ended={feed.ended && feed.isLive}
+                    palette={palette}
+                    locale={choices.locale}
+                    onJump={jump}
+                    onTurning={(tp) => {
+                      showTp(tp);
+                      setTab("turning");
+                    }}
+                  />
+                )
+              ) : tab === "events" ? (
+                <EventFeed
+                  events={feed.events}
+                  clock={feed.clock}
+                  meta={meta}
+                  palette={palette}
+                  locale={choices.locale}
+                  tps={tps}
+                  onJump={jump}
+                  onTurning={(tp) => {
+                    showTp(tp);
+                    setTab("turning");
+                  }}
+                />
+              ) : tab === "stats" ? (
                 <>
                   {spotlight(false)}
                   {stats && <AnalystPanel meta={meta} stats={stats} events={feed.events} palette={palette} t={t} onStat={onStat} />}
@@ -325,6 +392,18 @@ function Live({
           <aside className="panel flex min-h-[420px] flex-col overflow-y-auto lg:min-h-0">
             {offlineNote}
             <PlayerPanel meta={meta} events={feed.events} clock={Math.floor(feed.clock)} playerId={playerId} palette={palette} t={t} onJump={jump} />
+            <div className="border-t border-line">
+              <TurningPanel
+                tps={tps.filter((x) => x.side === (meta.home.lineup.concat(meta.home.bench).some((p) => p.id === playerId) ? "home" : "away"))}
+                selected={selectedTp}
+                onSelect={showTp}
+                meta={meta}
+                events={feed.events}
+                palette={palette}
+                locale={choices.locale}
+                onJump={jump}
+              />
+            </div>
             {spotlight(false)}
             <h3 className="eyebrow border-t border-line px-4 pt-3">{t.moments}</h3>
             <MomentsFeed cards={feed.cards.filter((c) => c.your_player || c.player_id === playerId || (KIND[c.kind]?.priority ?? 0) >= 5)} t={t} palette={palette} meta={meta} onJump={jump} />
@@ -355,6 +434,7 @@ function LayerBar({
   setSide,
   meta,
   t,
+  hasInsight,
 }: {
   layer: Layer;
   setLayer(l: Layer): void;
@@ -362,6 +442,7 @@ function LayerBar({
   setSide?(s: "home" | "away" | undefined): void;
   meta: MatchMeta;
   t: (typeof STRINGS)["en"];
+  hasInsight?: boolean;
 }) {
   const label: Record<Layer, string> = {
     live: `● ${t.layerLive}`,
@@ -370,12 +451,13 @@ function LayerBar({
     zones: t.layerZones,
     speed: t.layerSpeed,
     touches: t.layerTouches,
+    insight: `◎ ${t.layerInsight}`,
   };
-  const teamable = layer !== "live" && layer !== "zones";
+  const teamable = layer !== "live" && layer !== "zones" && layer !== "insight";
   return (
     <div className="flex flex-wrap gap-1.5">
       <div role="group" aria-label="Map" className="flex flex-wrap overflow-hidden rounded bg-surface ring-1 ring-line">
-        {LAYERS.map((l) => (
+        {(hasInsight ? [...LAYERS, "insight" as Layer] : LAYERS).map((l) => (
           <button
             key={l}
             onClick={() => setLayer(l)}
@@ -401,6 +483,28 @@ function LayerBar({
         </div>
       )}
     </div>
+  );
+}
+
+/** Selected turning point (else the latest that matters) on top, the timeline under it. */
+function TurningPanel({
+  tps, selected, onSelect, meta, events, palette, locale, onJump,
+}: {
+  tps: TurningPoint[];
+  selected: TurningPoint | null;
+  onSelect(tp: TurningPoint): void;
+  meta: MatchMeta;
+  events: MatchEvent[];
+  palette: TeamPalette;
+  locale: Locale;
+  onJump(c: number): void;
+}) {
+  const focus = (selected && tps.some((x) => x.id === selected.id) ? selected : null) ?? [...tps].reverse().find((x) => x.impact !== "low" && x.status !== "faded");
+  return (
+    <>
+      {focus && <TPCard tp={focus} meta={meta} events={events} palette={palette} locale={locale} onShow={onSelect} onJump={onJump} />}
+      <TPTimeline tps={tps} selected={focus?.id ?? null} onSelect={onSelect} meta={meta} palette={palette} locale={locale} />
+    </>
   );
 }
 
@@ -467,8 +571,8 @@ function TopBar(p: {
 }) {
   return (
     <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
-      <div className="num mr-auto text-lg font-bold uppercase tracking-wide">
-        Match <span className="text-accent">Co-pilot</span>
+      <div className="num mr-auto text-xl font-bold tracking-wide">
+        PITCH<span className="text-accent">IQ</span>
         <span className="ml-2 hidden align-middle font-sans text-2xs font-semibold tracking-wider text-muted sm:inline">SYNTHETIC DATA</span>
       </div>
       {p.screen === "live" && (

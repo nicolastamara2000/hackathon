@@ -6,6 +6,7 @@ import type { TeamPalette } from "../lib/teamColors";
 import { ballAt, buildBallPath, fromDisplay, keyAt, lineupAt, slotTarget, toDisplay, type OnPitch } from "../pitch/motion";
 import type { MatchFeed } from "../state/useMatchFeed";
 import type { Layer, MapFilter } from "../pitch/layers";
+import type { TurningPoint } from "../stats/turning";
 import { MapLayer, MapLegend } from "./MapLayer";
 
 const ASPECT = 105 / 68;
@@ -30,13 +31,14 @@ interface Props {
   focusPlayerId?: string;
   /** event map drawn over the live players ("live" = none) */
   layer?: Layer;
+  insight?: TurningPoint | null;
   filter?: MapFilter;
   onPick?(clock_s: number): void;
   /** overlays, drawn inside the pitch box */
   children?: React.ReactNode;
 }
 
-export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", filter = {}, onPick = () => {}, children }: Props) {
+export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight, filter = {}, onPick = () => {}, children }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const dyn = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 800 / ASPECT });
@@ -275,7 +277,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", filter 
           <circle className="ball" fill="#FFFFFF" stroke="#0B0F14" strokeWidth={1.5} display="none" />
         </g>
         {meta && map && (
-          <MapLayer layer={layer} meta={meta} events={shown} now={now} filter={filter} palette={palette} x={x} y={y} onPick={onPick} />
+          <MapLayer insight={insight} layer={layer} meta={meta} events={shown} now={now} filter={filter} palette={palette} x={x} y={y} onPick={onPick} />
         )}
         {meta && (
           <g className="font-sans" fontSize={Math.max(11, w / 90)} fontWeight={600} fill="rgb(var(--pitch-line) / 0.8)">

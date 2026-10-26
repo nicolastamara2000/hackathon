@@ -53,8 +53,9 @@ export function Setup({ fixtures, meta, choices, setChoices, onStart, starting, 
       animate={{ opacity: 1, y: 0, transition: { duration: 0.3 } }}
       className="mx-auto flex w-full max-w-5xl flex-col gap-5 p-4 lg:p-8"
     >
-      <header>
-        <h1 className="num text-tv-sm font-bold uppercase lg:text-tv-md">{t.setupTitle}</h1>
+      <Hero locale={choices.locale} onStart={onStart} starting={starting} disabled={!fixtures.length} />
+      <header className="border-t border-line pt-5">
+        <h2 className="num text-tv-sm font-bold uppercase">{t.setupTitle}</h2>
         <p className="text-muted">{t.setupSub}</p>
         {offline && <p className="mt-2 rounded border border-warn/60 bg-warn/10 px-3 py-2 text-sm">{t.offline}</p>}
       </header>
@@ -174,6 +175,108 @@ export function Setup({ fixtures, meta, choices, setChoices, onStart, starting, 
         </button>
       </div>
     </motion.div>
+  );
+}
+
+const HERO = {
+  en: {
+    kicker: "Real-time football intelligence · synthetic match data",
+    intro: "A real-time football intelligence platform that turns synthetic match events into tactical discoveries, explainable insights, automated commentary, and personalized fan experiences.",
+    promise: "Don't just tell me what happened. Show me why it happened, why it matters, and what might happen next.",
+    points: [
+      ["◆", "Tactical Turning Point Engine", "Compares every 10 minutes with the 10 before and flags what changed."],
+      ["✓", "Every claim is inspectable", "Each insight links to the events and numbers behind it."],
+      ["⇄", "Your way", "Fan, Analyst or Player focus, in English or Spanish."],
+    ],
+    statsTitle: "A stats site shows",
+    stats: [["Possession", "68%"], ["Shots", "12"], ["Completed passes", "540"]],
+    oursTitle: "PITCHIQ explains",
+    observed: "Silverlake's high recoveries rose from 2 to 9 in the last 10 minutes; Eastbrook's forward-pass completion fell from 81% to 58%.",
+    interp: "Silverlake's press is cutting Eastbrook's route through midfield.",
+    hyp: "If it continues, Eastbrook may need to go longer or add a midfielder between the lines.",
+    example: "Illustrative example with fictional clubs. Live insights only state what the match data supports.",
+    start: "Start the demo match",
+  },
+  "es-419": {
+    kicker: "Inteligencia futbolera en tiempo real · datos sintéticos",
+    intro: "Una plataforma de inteligencia futbolera en tiempo real que convierte eventos sintéticos de partido en hallazgos tácticos, insights explicables, relato automático y experiencias personalizadas.",
+    promise: "No me digas solo qué pasó. Mostrame por qué pasó, por qué importa y qué puede pasar ahora.",
+    points: [
+      ["◆", "Motor de puntos de quiebre", "Compara cada 10 minutos con los 10 anteriores y marca qué cambió."],
+      ["✓", "Cada afirmación se puede revisar", "Cada insight enlaza a los eventos y números que lo sostienen."],
+      ["⇄", "A tu manera", "Hincha, Analista o Foco en jugador, en inglés o español."],
+    ],
+    statsTitle: "Un sitio de estadísticas muestra",
+    stats: [["Posesión", "68%"], ["Tiros", "12"], ["Pases completados", "540"]],
+    oursTitle: "PITCHIQ explica",
+    observed: "Las recuperaciones altas de Silverlake subieron de 2 a 9 en los últimos 10 minutos; los pases hacia adelante de Eastbrook bajaron de 81% a 58%.",
+    interp: "La presión de Silverlake le está cortando a Eastbrook la salida por el medio.",
+    hyp: "Si sigue así, Eastbrook podría necesitar jugar más largo o sumar un volante entre líneas.",
+    example: "Ejemplo ilustrativo con clubes ficticios. Los insights en vivo solo dicen lo que los datos sostienen.",
+    start: "Empezar el partido demo",
+  },
+};
+
+/** Opening of the site: the promise, then the difference between a stat and an explanation. */
+function Hero({ locale, onStart, starting, disabled }: { locale: Locale; onStart(): void; starting: boolean; disabled: boolean }) {
+  const h = HERO[locale];
+  return (
+    <section className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <div>
+        <div className="eyebrow text-accent">{h.kicker}</div>
+        <h1 className="num mt-2 text-tv-md font-bold leading-none lg:text-tv-lg">
+          PITCH<span className="text-accent">IQ</span>
+        </h1>
+        <p className="mt-3 text-lg leading-snug">{h.intro}</p>
+        <p className="mt-3 border-l-4 border-accent pl-3 text-xl font-semibold leading-snug">{h.promise}</p>
+        <ul className="mt-4 grid gap-2">
+          {h.points.map(([icon, title, body]) => (
+            <li key={title} className="flex gap-3">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded bg-raised text-accent">{icon}</span>
+              <span>
+                <span className="font-semibold">{title}.</span> <span className="text-muted">{body}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={onStart}
+          disabled={disabled || starting}
+          className="num mt-5 rounded-lg bg-accent px-8 py-3 text-xl font-bold uppercase text-bg hover:brightness-110 disabled:opacity-60"
+        >
+          ▶ {h.start}
+        </button>
+      </div>
+      <div className="grid gap-3">
+        <div className="panel p-4">
+          <div className="eyebrow mb-2">{h.statsTitle}</div>
+          <div className="grid grid-cols-3 gap-2">
+            {h.stats.map(([k, v]) => (
+              <div key={k}>
+                <div className="num text-tv-sm font-bold leading-none text-muted">{v}</div>
+                <div className="text-xs text-muted">{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="panel border-l-4 border-l-accent p-4">
+          <div className="eyebrow mb-2 text-accent">◆ {h.oursTitle}</div>
+          <Tagged tag={locale === "en" ? "Observed" : "Observado"} cls="bg-ink text-bg">{h.observed}</Tagged>
+          <Tagged tag={locale === "en" ? "Interpretation" : "Interpretación"} cls="ring-1 ring-line text-muted">{h.interp}</Tagged>
+          <Tagged tag={locale === "en" ? "Hypothesis" : "Hipótesis"} cls="border border-dashed border-accent text-accent">{h.hyp}</Tagged>
+          <p className="mt-3 text-2xs text-muted">{h.example}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Tagged({ tag, cls, children }: { tag: string; cls: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-2 first:mt-0">
+      <span className={`rounded-sm px-1.5 py-px text-2xs font-bold uppercase tracking-wider ${cls}`}>{tag}</span>
+      <p className="mt-1 leading-snug">{children}</p>
+    </div>
   );
 }
 

@@ -2,8 +2,9 @@ import * as d3 from "d3";
 import { memo } from "react";
 import type { MatchEvent, MatchMeta } from "../feed/types";
 import type { TeamPalette } from "../lib/teamColors";
+import type { TurningPoint } from "../stats/turning";
 import {
-  passMarks, shotMarks, speedMarks, touchGrid, zoneControl,
+  fixed, sideOf, passMarks, shotMarks, speedMarks, touchGrid, zoneControl,
   TOUCH_COLS, TOUCH_ROWS, ZONE_COLS, ZONE_ROWS, type Layer, type MapFilter,
 } from "../pitch/layers";
 
@@ -16,6 +17,7 @@ const sprintColor = d3.scaleLinear<string>().domain([20, 25, 29, 33]).range(["#5
 type Scale = d3.ScaleLinear<number, number>;
 
 interface Props {
+  insight?: TurningPoint | null;
   layer: Exclude<Layer, "live">;
   meta: MatchMeta;
   events: MatchEvent[]; // already cut at the playhead
@@ -28,9 +30,37 @@ interface Props {
 }
 
 /** One event map over the pitch. Every mark is clickable and jumps to its moment. */
-export const MapLayer = memo(function MapLayer({ layer, meta, events, now, filter, palette, x, y, onPick }: Props) {
+export const MapLayer = memo(function MapLayer({ insight, layer, meta, events, now, filter, palette, x, y, onPick }: Props) {
   const unit = x(1) - x(0);
   const col = (s: "home" | "away") => palette[s];
+
+  if (layer === "insight") {
+    if (!insight) return null;
+    const ids = new Set(insight.evidence);
+    const ev = events.filter((e) => ids.has(e.id) && e.location);
+    const z = insight.zone;
+    const c = col(insight.side);
+    return (
+      <g>
+        {z && (
+          <rect x={x(z.x0)} y={y(z.y0)} width={x(z.x1) - x(z.x0)} height={y(z.y1) - y(z.y0)} fill={c} fillOpacity={0.16} stroke="#F2F5F8" strokeOpacity={0.8} strokeDasharray="8 5" strokeWidth={2} />
+        )}
+        {ev.map((e) => {
+          const s = sideOf(meta, e.team_id) ?? insight.side;
+          const a = fixed(e.location!, e.team_id, meta);
+          const b = e.end_location ? fixed(e.end_location, e.team_id, meta) : null;
+          return (
+            <g key={e.id} className="cursor-pointer" onClick={() => onPick(e.clock_s - 3)}>
+              {b && <line x1={x(a[0])} y1={y(a[1])} x2={x(b[0])} y2={y(b[1])} stroke={col(s)} strokeWidth={2.2} strokeOpacity={0.9} strokeDasharray={e.outcome && e.outcome !== "Complete" ? "4 3" : undefined} />}
+              <circle cx={x(a[0])} cy={y(a[1])} r={e.type === "Shot" ? 4 + Math.sqrt(e.xg ?? 0) * unit * 3.2 : Math.max(4, unit * 0.9)} fill={col(s)} stroke="#F2F5F8" strokeWidth={1.5}>
+                <title>{`${e.minute}′ ${e.type} · ${e.player_name ?? ""}`}</title>
+              </circle>
+            </g>
+          );
+        })}
+      </g>
+    );
+  }
 
   if (layer === "shots") {
     const shots = shotMarks(meta, events, filter);
@@ -189,6 +219,7 @@ export function MapLegend({ layer, labels }: { layer: Exclude<Layer, "live">; la
       {layer === "zones" && <div>{labels.zonesHint}</div>}
       {layer === "speed" && <div>{labels.speedHint}</div>}
       {layer === "touches" && <div>{labels.touchesHint}</div>}
+      {layer === "insight" && <div>{labels.insightHint}</div>}
     </div>
   );
 }
