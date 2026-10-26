@@ -117,3 +117,54 @@ def test_player_focus_mode_follows_the_player():
     shown = [v for c in cards if (v := view(c, prof))]
     assert all(v["your_player"] or v["kind"] in ("goal", "half_time", "full_time") for v in shown)
     assert any(v["your_player"] for v in shown)
+
+
+class WriterClient(af.BaseChatClient):
+    """Answers the story and scout writers; can slip in a number that is not in the facts."""
+
+    def __init__(self, invent=False):
+        super().__init__()
+        self.invent, self.calls = invent, 0
+
+    async def _answer(self, messages, options):
+        from matchcopilot.agents.writers import PlayerReportOut, StoryOut
+        fmt = options.get("response_format")
+        self.calls += 1
+        n = " with 77 passes" if self.invent else ""
+        if fmt is StoryOut:
+            body = {"headline": f"Eastbrook press{n}", "paragraphs": ["Eastbrook won it high: 9 high recoveries."],
+                    "tactical_key": "The press.", "watch_next": None}
+        else:
+            body = {"headline": "Busy night", "role": "Holding midfielder.", "strengths": ["47 touches."],
+                    "concerns": ["Few shots."], "vs_opponent": "Out-touched his man.", "verdict": "Solid."}
+        return af.ChatResponse(messages=[af.Message(role="assistant", contents=[af.Content.from_text(json.dumps(body))])])
+
+    def _inner_get_response(self, *, messages, stream, options, **kwargs):
+        return self._answer(messages, options)
+
+
+def test_story_writer_passes_fact_check_and_caches():
+    from matchcopilot.agents.writers import Writers
+    client = WriterClient()
+    w = Writers(client)
+    facts = {"score": [2, 0], "high_recoveries": 9}
+    out = asyncio.run(w.story(facts, "en"))
+    assert out["headline"].startswith("Eastbrook") and client.calls == 1
+    asyncio.run(w.story(facts, "en"))
+    assert client.calls == 1  # cached
+
+
+def test_writer_rejects_invented_numbers_after_one_retry():
+    from matchcopilot.agents.writers import Writers
+    client = WriterClient(invent=True)
+    with pytest.raises(ValueError):
+        asyncio.run(Writers(client).story({"high_recoveries": 9}, "es"))
+    assert client.calls == 2
+
+
+def test_player_report_endpoint_without_foundry_is_503():
+    from fastapi.testclient import TestClient
+    from matchcopilot.api.app import app
+    with TestClient(app) as c:
+        r = c.post("/api/ai/player-report", json={"lang": "en", "facts": {"touches": 47}})
+    assert r.status_code == 503

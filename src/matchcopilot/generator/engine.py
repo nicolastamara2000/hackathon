@@ -91,6 +91,7 @@ class MatchSimulator:
         self.on_pitch: dict[str, list[Player]] = {home.id: list(home.lineup), away.id: list(away.lineup)}
         self.bench: dict[str, list[Player]] = {home.id: list(home.bench), away.id: list(away.bench)}
         self.phys: dict[str, _Phys] = {p.id: _Phys() for t in (home, away) for p in t.lineup + t.bench}
+        self.booked: set[str] = set()
         self.subs = self._plan_subs()
 
     # ------------------------------------------------------------------ helpers
@@ -386,7 +387,10 @@ class MatchSimulator:
 
     def _foul(self, team: Team, opp: Team, fouler: Player, fouled: Player, loc):
         self._emit("Foul Committed", opp, fouler, location=_mirror(loc), possession_team_id=team.id)
-        if self.rng.random() < 0.13:
+        # a booked player is never booked again: the engine has no sendings-off, so a
+        # second yellow would leave a "sent off" player on the pitch (same RNG draws either way)
+        if self.rng.random() < 0.13 and fouler.id not in self.booked:
+            self.booked.add(fouler.id)
             self._emit("Card", opp, fouler, card="Yellow", possession_team_id=team.id)
         self._advance(float(self.rng.uniform(15, 35)))
         return (team, loc, "Free Kick", None)
