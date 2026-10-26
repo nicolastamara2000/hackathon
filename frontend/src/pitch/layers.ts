@@ -9,7 +9,7 @@ import type { MatchEvent, MatchMeta, XY } from "../feed/types";
 import type { Side } from "../stats/engine";
 import { toDisplay } from "./motion";
 
-export type Layer = "live" | "shots" | "passes" | "zones" | "speed" | "touches";
+export type Layer = "live" | "shots" | "passes" | "zones" | "speed" | "touches" | "insight";
 export const LAYERS: Layer[] = ["live", "shots", "passes", "zones", "speed", "touches"];
 
 /** The setup metric picks the map that explains it. */

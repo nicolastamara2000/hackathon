@@ -121,6 +121,9 @@ const en = {
   touchesHint: "Where the ball was played. Darker = more touches. Home attacks →",
   latestMoment: "Latest moment",
   allPlayers: "Both teams",
+  insightHint: "Dashed box = zone of the turning point. Dots = its evidence events. Home attacks →",
+  layerInsight: "Turning point",
+  turningTab: "Turning points",
 };
 
 export type Strings = typeof en;
@@ -242,6 +245,9 @@ const es: Strings = {
   touchesHint: "Dónde se jugó la pelota. Más oscuro = más toques. Local ataca →",
   latestMoment: "Último momento",
   allPlayers: "Ambos equipos",
+  insightHint: "Recuadro = zona del punto de quiebre. Puntos = sus eventos de evidencia. Local ataca →",
+  layerInsight: "Punto de quiebre",
+  turningTab: "Puntos de quiebre",
 };
 
 export const STRINGS: Record<Locale, Strings> = { en, "es-419": es };
