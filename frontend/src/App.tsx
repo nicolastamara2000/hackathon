@@ -8,9 +8,12 @@ import { PlayerPanel } from "./components/PlayerPanel";
 import { Scoreboard } from "./components/Scoreboard";
 import { Setup, type Choices, type Mode } from "./components/Setup";
 import { SourceDrawer } from "./components/SourceDrawer";
+import { Spotlight } from "./components/Spotlight";
+import { KIND } from "./components/Moments";
+import { LAYERS, layerForMetric, type Layer } from "./pitch/layers";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
 import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
-import type { MatchMeta } from "./feed/types";
+import type { MatchMeta, MomentCard } from "./feed/types";
 import { STRINGS, type Locale } from "./i18n/strings";
 import { applyTeamColors, type TeamPalette } from "./lib/teamColors";
 import { useMatchFeed } from "./state/useMatchFeed";
@@ -81,7 +84,8 @@ export default function App() {
   };
 
   const lang = choices.locale === "en" ? "en" : "es";
-  const feedKey = `${screen}|${runId}|${choices.seed}|${choices.mode}|${lang}|${choices.team}|${choices.player}|${choices.metric}|${offline}`;
+    // the metric is a display choice: switching it live must not reconnect the stream
+  const feedKey = `${screen}|${runId}|${choices.seed}|${choices.mode}|${lang}|${choices.team}|${choices.player}|${offline}`;
   const connect = useMemo(() => {
     if (screen !== "live") return null;
     if (offline) return () => connectDemo(choices.speed);
@@ -103,6 +107,8 @@ export default function App() {
         screen={screen}
         mode={choices.mode}
         setMode={(mode) => setChoices({ ...choices, mode })}
+        metric={choices.metric}
+        setMetric={(metric) => setChoices({ ...choices, metric })}
         locale={choices.locale}
         setLocale={(locale) => setChoices({ ...choices, locale })}
         theme={theme}
@@ -144,7 +150,11 @@ function Live({
   theme: Theme;
   t: (typeof STRINGS)["en"];
 }) {
-  const [tab, setTab] = useState<Tab>("moments");
+  const [tab, setTab] = useState<Tab>("stats");
+  const defaultLayer: Layer = choices.mode === "player" ? "touches" : layerForMetric(choices.metric);
+  const [layer, setLayer] = useState<Layer>(defaultLayer);
+  const [mapSide, setMapSide] = useState<"home" | "away" | undefined>(undefined);
+  useEffect(() => setLayer(defaultLayer), [defaultLayer]);
   const [statKey, setStatKey] = useState<string | null>(null);
   const [palette, setPalette] = useState<TeamPalette>(PALETTE_FALLBACK);
   const [slow, setSlow] = useState(false);
@@ -181,50 +191,105 @@ function Live({
     );
 
   const mode: Mode = choices.mode;
-  const showStats = mode === "analyst" && tab === "stats";
+  const teamSide = choices.team === meta.home.id ? "home" : choices.team === meta.away.id ? "away" : undefined;
+  // Player focus always follows someone: the pick, else the favorite club's (or home) striker
+  const focusTeam = meta[teamSide ?? "home"];
+  const playerId = choices.player || (mode === "player" ? (focusTeam.lineup.find((p) => p.role === "FWD") ?? focusTeam.lineup[0]).id : "");
+  const cut = feed.events.filter((e) => e.clock_s <= feed.clock);
+  const connecting = !hasEvents && (
+    <div className="absolute inset-0 grid place-items-center">
+      <div className="rounded-lg bg-bg/90 px-6 py-4 text-center shadow-[var(--shadow)]">
+        <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-line border-t-accent" />
+        <div className="text-lg">{t.connecting}</div>
+        {slow && <div className="mt-1 text-sm text-muted">{t.slowFeed}</div>}
+      </div>
+    </div>
+  );
+  const pitch = (withLayers: boolean) => (
+    <>
+      {withLayers && (
+        <LayerBar layer={layer} setLayer={setLayer} side={mapSide} setSide={mode === "player" ? undefined : setMapSide} meta={meta} t={t} />
+      )}
+      <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
+        <Pitch
+          feed={feed}
+          palette={palette}
+          t={t}
+          focusPlayerId={playerId || undefined}
+          layer={withLayers ? layer : "live"}
+          filter={mode === "player" ? { playerId } : { side: mapSide }}
+          onPick={jump}
+        >
+          <OverlayLayer cards={feed.cards} events={feed.events} clock={feed.clock} isLive={feed.isLive} palette={palette} meta={meta} t={t} />
+        </Pitch>
+        {connecting}
+      </div>
+    </>
+  );
+  const strip = (
+    <MomentumStrip
+      meta={meta}
+      stats={stats}
+      liveStats={feed.liveStats}
+      playNow={playNow}
+      playHead={playHead}
+      halfPlay={breaks.he1 ?? 45 * 60}
+      isLive={feed.isLive}
+      speed={feed.speed}
+      palette={palette}
+      t={t}
+      onSeek={feed.seekPlay}
+      onLive={feed.goLive}
+      onSpeed={offline ? feed.setSpeed : undefined}
+    />
+  );
+  const spotlight = (simple: boolean) =>
+    stats && (
+      <Spotlight
+        metric={choices.metric}
+        meta={meta}
+        stats={stats}
+        events={cut}
+        palette={palette}
+        locale={choices.locale}
+        t={t}
+        simple={simple}
+        playerId={mode === "player" ? playerId : undefined}
+        onJump={jump}
+      />
+    );
+  const offlineNote = offline && <p className="border-b border-line bg-warn/10 px-4 py-2 text-xs">{t.offline}</p>;
 
   return (
     <>
       <Scoreboard meta={meta} stats={stats} clock={clock} isLive={feed.isLive} ended={feed.ended} palette={palette} t={t} onStat={onStat} />
 
-      <main className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_440px]">
-        <div className="flex min-h-0 min-w-0 flex-col gap-3">
-          <div className="relative aspect-[105/68] w-full lg:aspect-auto lg:min-h-0 lg:flex-1">
-            <Pitch feed={feed} palette={palette} t={t} focusPlayerId={choices.player || undefined}>
-              <OverlayLayer cards={feed.cards} events={feed.events} clock={feed.clock} isLive={feed.isLive} palette={palette} meta={meta} t={t} />
-            </Pitch>
-            {!hasEvents && (
-              <div className="absolute inset-0 grid place-items-center">
-                <div className="rounded-lg bg-bg/90 px-6 py-4 text-center shadow-[var(--shadow)]">
-                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-line border-t-accent" />
-                  <div className="text-lg">{t.connecting}</div>
-                  {slow && <div className="mt-1 text-sm text-muted">{t.slowFeed}</div>}
-                </div>
-              </div>
-            )}
+      {mode === "fan" && (
+        // Fan: TV picture, one big sentence, big numbers, the last three moments as cards. No tabs, no charts.
+        <main className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="flex min-h-0 min-w-0 flex-col gap-3">
+            {pitch(false)}
+            <FanMoments cards={feed.cards} meta={meta} palette={palette} t={t} onJump={jump} />
           </div>
-          <MomentumStrip
-            meta={meta}
-            stats={stats}
-            liveStats={feed.liveStats}
-            playNow={playNow}
-            playHead={playHead}
-            halfPlay={breaks.he1 ?? 45 * 60}
-            isLive={feed.isLive}
-            speed={feed.speed}
-            palette={palette}
-            t={t}
-            onSeek={feed.seekPlay}
-            onLive={feed.goLive}
-            onSpeed={offline ? feed.setSpeed : undefined}
-          />
-        </div>
+          <aside className="panel flex min-h-0 flex-col overflow-y-auto">
+            {offlineNote}
+            {stats && <FanPanel meta={meta} stats={stats} locale={choices.locale} t={t} onStat={onStat} />}
+            {spotlight(true)}
+          </aside>
+        </main>
+      )}
 
-        <aside className="panel flex min-h-[420px] flex-col overflow-hidden lg:min-h-0">
-          {offline && <p className="border-b border-line bg-warn/10 px-4 py-2 text-xs">{t.offline}</p>}
-          {mode === "analyst" && (
+      {mode === "analyst" && (
+        // Analyst: event maps on the pitch, the metric explained, every number one tab away.
+        <main className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="flex min-h-0 min-w-0 flex-col gap-3">
+            {pitch(true)}
+            {strip}
+          </div>
+          <aside className="panel flex min-h-[420px] flex-col overflow-hidden lg:min-h-0">
+            {offlineNote}
             <div className="flex border-b border-line" role="tablist">
-              {(["moments", "stats"] as Tab[]).map((k) => (
+              {(["stats", "moments"] as Tab[]).map((k) => (
                 <button
                   key={k}
                   role="tab"
@@ -236,23 +301,36 @@ function Live({
                 </button>
               ))}
             </div>
-          )}
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {mode === "fan" && stats && <FanPanel meta={meta} stats={stats} locale={choices.locale} t={t} onStat={onStat} />}
-            {mode === "player" && (
-              <PlayerPanel meta={meta} events={feed.events} clock={Math.floor(feed.clock)} playerId={choices.player || undefined} palette={palette} t={t} />
-            )}
-            {showStats && stats ? (
-              <AnalystPanel meta={meta} stats={stats} events={feed.events} palette={palette} t={t} onStat={onStat} />
-            ) : (
-              <>
-                {mode !== "analyst" && <h3 className="eyebrow border-t border-line px-4 pt-3">{t.moments}</h3>}
-                <MomentsFeed cards={feed.cards} big={mode === "fan"} t={t} palette={palette} meta={meta} onJump={jump} />
-              </>
-            )}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {tab === "stats" ? (
+                <>
+                  {spotlight(false)}
+                  {stats && <AnalystPanel meta={meta} stats={stats} events={feed.events} palette={palette} t={t} onStat={onStat} />}
+                </>
+              ) : (
+                <MomentsFeed cards={feed.cards} t={t} palette={palette} meta={meta} onJump={jump} />
+              )}
+            </div>
+          </aside>
+        </main>
+      )}
+
+      {mode === "player" && (
+        // Player focus: one player's map, head-to-head with their direct opponent, their key actions.
+        <main className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_440px]">
+          <div className="flex min-h-0 min-w-0 flex-col gap-3">
+            {pitch(true)}
+            {strip}
           </div>
-        </aside>
-      </main>
+          <aside className="panel flex min-h-[420px] flex-col overflow-y-auto lg:min-h-0">
+            {offlineNote}
+            <PlayerPanel meta={meta} events={feed.events} clock={Math.floor(feed.clock)} playerId={playerId} palette={palette} t={t} onJump={jump} />
+            {spotlight(false)}
+            <h3 className="eyebrow border-t border-line px-4 pt-3">{t.moments}</h3>
+            <MomentsFeed cards={feed.cards.filter((c) => c.your_player || c.player_id === playerId || (KIND[c.kind]?.priority ?? 0) >= 5)} t={t} palette={palette} meta={meta} onJump={jump} />
+          </aside>
+        </main>
+      )}
 
       <SourceDrawer
         statKey={statKey}
@@ -267,6 +345,92 @@ function Live({
         }}
       />
     </>
+  );
+}
+
+function LayerBar({
+  layer,
+  setLayer,
+  side,
+  setSide,
+  meta,
+  t,
+}: {
+  layer: Layer;
+  setLayer(l: Layer): void;
+  side?: "home" | "away";
+  setSide?(s: "home" | "away" | undefined): void;
+  meta: MatchMeta;
+  t: (typeof STRINGS)["en"];
+}) {
+  const label: Record<Layer, string> = {
+    live: `● ${t.layerLive}`,
+    shots: t.layerShots,
+    passes: t.layerPasses,
+    zones: t.layerZones,
+    speed: t.layerSpeed,
+    touches: t.layerTouches,
+  };
+  const teamable = layer !== "live" && layer !== "zones";
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      <div role="group" aria-label="Map" className="flex flex-wrap overflow-hidden rounded bg-surface ring-1 ring-line">
+        {LAYERS.map((l) => (
+          <button
+            key={l}
+            onClick={() => setLayer(l)}
+            aria-pressed={layer === l}
+            className={`px-2.5 py-1 text-xs font-semibold sm:text-sm ${layer === l ? "bg-accent text-bg" : "text-ink hover:bg-raised"}`}
+          >
+            {label[l]}
+          </button>
+        ))}
+      </div>
+      {teamable && setSide && (
+        <div role="group" aria-label="Team" className="flex overflow-hidden rounded bg-surface ring-1 ring-line">
+          {([undefined, "home", "away"] as const).map((s) => (
+            <button
+              key={s ?? "both"}
+              onClick={() => setSide(s)}
+              aria-pressed={side === s}
+              className={`px-2.5 py-1 text-xs font-semibold sm:text-sm ${side === s ? "bg-ink text-bg" : "text-ink hover:bg-raised"}`}
+            >
+              {s ? meta[s].short_name : t.allPlayers}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Fan mode: the three latest moments as big cards under the picture. */
+function FanMoments({ cards, meta, palette, t, onJump }: { cards: MomentCard[]; meta: MatchMeta; palette: TeamPalette; t: (typeof STRINGS)["en"]; onJump(c: number): void }) {
+  const last = [...cards].reverse().slice(0, 3);
+  if (!last.length) return <p className="panel px-5 py-4 text-lg text-muted">{t.momentsEmpty}</p>;
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {last.map((c, i) => {
+        const side = c.team_id === meta.home.id ? "home" : c.team_id === meta.away.id ? "away" : null;
+        return (
+          <button
+            key={c.card_id}
+            onClick={() => onJump(c.clock_s - 6)}
+            className={`panel p-4 text-left transition hover:bg-raised ${i === 0 ? "ring-2 ring-accent" : ""}`}
+            style={{ borderTop: `6px solid ${side ? palette[side] : "rgb(var(--line))"}` }}
+          >
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <span className="text-2xl" aria-hidden>
+                {KIND[c.kind]?.icon ?? "•"}
+              </span>
+              <span className="num text-lg text-ink">{c.minute}′</span>
+              {i === 0 && <span className="ml-auto text-2xs font-bold uppercase tracking-wider text-accent">{t.latestMoment}</span>}
+            </div>
+            <p className="mt-1 text-lg font-semibold leading-snug">{c.headline}</p>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -291,6 +455,8 @@ function TopBar(p: {
   screen: "setup" | "live";
   mode: Mode;
   setMode(m: Mode): void;
+  metric: string;
+  setMetric(m: string): void;
   locale: Locale;
   setLocale(l: Locale): void;
   theme: Theme;
@@ -308,6 +474,28 @@ function TopBar(p: {
       {p.screen === "live" && (
         <>
           <Segmented label={p.t.mode} value={p.mode} onChange={p.setMode} options={[["fan", p.t.fan], ["analyst", p.t.analyst], ["player", p.t.player]]} />
+          <select
+            value={p.metric}
+            onChange={(e) => p.setMetric(e.target.value)}
+            aria-label={p.t.stepMetric}
+            title={p.t.stepMetric}
+            className="rounded bg-surface px-2 py-1 text-sm font-semibold ring-1 ring-line"
+          >
+            {(
+              [
+                ["", `${p.t.stepMetric}: ${p.t.none}`],
+                ["xg", p.t.metricXg],
+                ["control", p.t.metricControl],
+                ["pass_difficulty", p.t.metricPass],
+                ["speed", p.t.metricSpeed],
+                ["distance", p.t.metricDistance],
+              ] as [string, string][]
+            ).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
           <button onClick={p.onChangeMatch} className="rounded px-3 py-1 text-sm font-semibold text-muted ring-1 ring-line hover:bg-raised">
             ⇆ {p.t.changeMatch}
           </button>
