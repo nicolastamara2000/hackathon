@@ -34,11 +34,14 @@ interface Props {
   insight?: TurningPoint | null;
   filter?: MapFilter;
   onPick?(clock_s: number): void;
+  /** map-only pitch: no live players, maps show events from this match clock on */
+  mapOnly?: boolean;
+  mapFrom?: number;
   /** overlays, drawn inside the pitch box */
   children?: React.ReactNode;
 }
 
-export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight, filter = {}, onPick = () => {}, children }: Props) {
+export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight, filter = {}, mapOnly = false, mapFrom = 0, onPick = () => {}, children }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const dyn = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 800 / ASPECT });
@@ -67,7 +70,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight
 
   // animation loop: d3 owns the dynamic layer, React owns the static pitch
   useEffect(() => {
-    if (!meta || !dyn.current) return;
+    if (!meta || !dyn.current || mapOnly) return;
     const g = d3.select(dyn.current);
     const homeId = meta.home.id;
     const pos = posRef.current;
@@ -225,7 +228,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [meta, x, y, w, pad, palette, focusPlayerId, feed.clockRef, feed.events, feed.speed]);
+  }, [meta, x, y, w, pad, palette, focusPlayerId, feed.clockRef, feed.events, feed.speed, mapOnly]);
 
   // static markings, in metres
   const mx = (m: number) => x((m * 120) / 105);
@@ -235,7 +238,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight
   const map = layer !== "live";
   const homeRight = map || period !== 2; // maps use a fixed frame: home attacks right
   const now = Math.floor(feed.clock);
-  const shown = useMemo(() => feed.events.filter((e) => e.clock_s <= now), [feed.version, now]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shown = useMemo(() => feed.events.filter((e) => e.clock_s <= now && e.clock_s >= mapFrom), [feed.version, now, mapFrom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={wrap} className="absolute inset-0 flex items-center justify-center">
@@ -271,7 +274,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", insight
           })}
           <circle cx={x(60)} cy={y(40)} r={2} fill="rgb(var(--pitch-line) / 0.7)" />
         </g>
-        <g ref={dyn} opacity={map ? 0.28 : 1}>
+        <g ref={dyn} opacity={map ? 0.28 : 1} display={mapOnly ? "none" : undefined}>
           <g className="trail" />
           <g className="players" />
           <circle className="ball" fill="#FFFFFF" stroke="#0B0F14" strokeWidth={1.5} display="none" />

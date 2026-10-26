@@ -6,6 +6,7 @@ not once per viewer). Each viewer's stream is shaped by their profile.
     GET  /api/matches                         fixtures available to broadcast
     GET  /api/matches/{seed}                  match metadata (clubs, lineups)
     POST /api/live/{seed}/start?speed=30      start (or restart) a broadcast
+    POST /api/live/{seed}/speed?speed=60      change the speed of a running broadcast
     GET  /api/live/{seed}/stream?mode=fan&lang=es&team=HCF&player=HCF-9&metric=xg&events=true
     GET  /api/live/{seed}/cards               every card so far, machine-readable
 
@@ -30,7 +31,7 @@ from ..generator.engine import generate_match
 from ..narration.cards import Card
 from ..narration.personalize import ViewerProfile, view
 from ..session import MatchSession
-from .sources import event_source, eventhub_enabled
+from .sources import Pace, event_source, eventhub_enabled
 from .store import make_store
 
 FIXTURES = [7, 21, 33, 8, 9]
@@ -54,7 +55,8 @@ class Broadcast:
         self.session.subscribe(self._fanout)
         if store is not None:
             self.session.subscribe(store)
-        self.task = asyncio.create_task(self.session.run(event_source(self.meta, self.events, speed)))
+        self.pace = Pace(speed)
+        self.task = asyncio.create_task(self.session.run(event_source(self.meta, self.events, self.pace)))
 
     async def _fanout(self, msg: dict) -> None:
         self.backlog.append(msg)
@@ -132,10 +134,27 @@ async def match_meta(seed: int):
     return meta.model_dump()
 
 
+@app.get("/api/matches/{seed}/events")
+async def match_events(seed: int, until: float | None = Query(None, ge=0)):
+    """Events of a match up to `until` (match clock seconds): the landing page previews the opening phase."""
+    _, events = generate_match(seed)
+    return [e.model_dump(exclude_none=True) for e in events if until is None or e.clock_s <= until]
+
+
 @app.post("/api/live/{seed}/start")
 async def start(seed: int, speed: float = DEFAULT_SPEED, restart: bool = False):
     b = hub.start(seed, speed, restart)
     return {"match_id": b.meta["match_id"], "speed": speed, "agents": hub.client is not None}
+
+
+@app.post("/api/live/{seed}/speed")
+async def set_speed(seed: int, speed: float = Query(..., ge=1, le=120)):
+    """Change the replay speed of a running broadcast (every viewer of it follows)."""
+    b = hub.live.get(seed)
+    if b is None or b.task.done():
+        raise HTTPException(404, "broadcast not running")
+    b.pace.speed = speed
+    return {"speed": speed}
 
 
 @app.get("/api/live/{seed}/cards")
