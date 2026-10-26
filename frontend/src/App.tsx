@@ -12,6 +12,8 @@ import { Spotlight } from "./components/Spotlight";
 import { KIND } from "./components/Moments";
 import { LAYERS, layerForMetric, type Layer } from "./pitch/layers";
 import { TPCard, TPFanLine, TPTimeline } from "./components/TurningPoints";
+import { EventFeed } from "./components/EventFeed";
+import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
 import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
@@ -22,7 +24,7 @@ import { useMatchFeed } from "./state/useMatchFeed";
 import { playTime, type Breaks } from "./stats/time";
 
 type Theme = "dark" | "light";
-type Tab = "turning" | "stats" | "moments";
+type Tab = "turning" | "events" | "stats" | "moments";
 
 const PALETTE_FALLBACK: TeamPalette = { home: "rgb(var(--home))", away: "rgb(var(--away))", onHome: "#fff", onAway: "#0B0F14" };
 const DEFAULTS: Choices = { seed: 7, mode: "fan", team: "", player: "", locale: "en", metric: "", speed: 20 };
@@ -253,6 +255,17 @@ function Live({
       onSeek={feed.seekPlay}
       onLive={feed.goLive}
       onSpeed={offline ? feed.setSpeed : undefined}
+      turning={tps
+        .filter((x) => x.impact !== "low")
+        .map((x) => ({ id: x.id, play_s: x.play_s, side: x.side, impact: x.impact, minute: x.minute, label: tpText(x, meta, choices.locale).headline }))}
+      selectedTurning={tpId}
+      onTurning={(id) => {
+        const tp = tps.find((x) => x.id === id);
+        if (tp) {
+          showTp(tp);
+          setTab("turning");
+        }
+      }}
     />
   );
   const spotlight = (simple: boolean) =>
@@ -308,21 +321,35 @@ function Live({
           <aside className="panel flex min-h-[420px] flex-col overflow-hidden lg:min-h-0">
             {offlineNote}
             <div className="flex border-b border-line" role="tablist">
-              {(["turning", "stats", "moments"] as Tab[]).map((k) => (
+              {(["turning", "events", "stats", "moments"] as Tab[]).map((k) => (
                 <button
                   key={k}
                   role="tab"
                   aria-selected={tab === k}
                   onClick={() => setTab(k)}
-                  className={`flex-1 py-2.5 text-sm font-semibold ${tab === k ? "border-b-2 border-accent text-ink" : "text-muted hover:text-ink"}`}
+                  className={`flex-auto whitespace-nowrap px-2 py-2.5 text-xs font-semibold sm:text-sm ${tab === k ? "border-b-2 border-accent text-ink" : "text-muted hover:text-ink"}`}
                 >
-                  {k === "moments" ? `${t.moments} · ${feed.cards.length}` : k === "turning" ? `${t.turningTab} · ${tps.length}` : t.stats}
+                  {k === "moments" ? t.moments : k === "turning" ? `${t.turningTab} · ${tps.length}` : k === "events" ? t.eventsTab : t.stats}
                 </button>
               ))}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
               {tab === "turning" ? (
                 <TurningPanel tps={tps} selected={selectedTp} onSelect={showTp} meta={meta} events={feed.events} palette={palette} locale={choices.locale} onJump={jump} />
+              ) : tab === "events" ? (
+                <EventFeed
+                  events={feed.events}
+                  clock={feed.clock}
+                  meta={meta}
+                  palette={palette}
+                  locale={choices.locale}
+                  tps={tps}
+                  onJump={jump}
+                  onTurning={(tp) => {
+                    showTp(tp);
+                    setTab("turning");
+                  }}
+                />
               ) : tab === "stats" ? (
                 <>
                   {spotlight(false)}
@@ -525,8 +552,8 @@ function TopBar(p: {
 }) {
   return (
     <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
-      <div className="num mr-auto text-lg font-bold uppercase tracking-wide">
-        Match <span className="text-accent">Co-pilot</span>
+      <div className="num mr-auto text-xl font-bold tracking-wide">
+        PITCH<span className="text-accent">IQ</span>
         <span className="ml-2 hidden align-middle font-sans text-2xs font-semibold tracking-wider text-muted sm:inline">SYNTHETIC DATA</span>
       </div>
       {p.screen === "live" && (

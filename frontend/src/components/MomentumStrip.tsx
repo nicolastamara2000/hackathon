@@ -25,16 +25,21 @@ interface Props {
   onLive(): void;
   /** offered only when the feed can change speed (the offline demo) */
   onSpeed?(s: number): void;
+  /** turning points, drawn as diamonds on top of the wave */
+  turning?: { id: string; play_s: number; side: "home" | "away"; impact: string; label: string; minute: number }[];
+  selectedTurning?: string | null;
+  onTurning?(id: string): void;
 }
 
 /**
  * Bottom strip: mirrored momentum wave (home up, away down) over a scrubbable
  * timeline with key-moment markers. Drag anywhere to scrub; markers jump 8 s before the moment.
  */
-export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, isLive, speed, palette, t, onSeek, onLive, onSpeed }: Props) {
+export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, isLive, speed, palette, t, onSeek, onLive, onSpeed, turning = [], selectedTurning, onTurning }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(900);
   const [hover, setHover] = useState<KeyMoment | null>(null);
+  const [hoverTp, setHoverTp] = useState<Props["turning"] extends (infer U)[] | undefined ? U | null : never>(null);
   useEffect(() => {
     const ro = new ResizeObserver(([e]) => setW(Math.max(280, e.contentRect.width)));
     ro.observe(wrap.current!);
@@ -143,6 +148,26 @@ export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, is
               <Marker k={k} palette={palette} />
             </g>
           ))}
+          {/* turning points: diamonds above the wave, size = impact */}
+          {turning.map((tp) => {
+            const r = tp.impact === "high" ? 6 : 4.5;
+            const sel = tp.id === selectedTurning;
+            return (
+              <g
+                key={tp.id}
+                transform={`translate(${x(tp.play_s)},${8})`}
+                className="cursor-pointer"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  onTurning?.(tp.id);
+                }}
+                onMouseEnter={() => setHoverTp(tp)}
+                onMouseLeave={() => setHoverTp(null)}
+              >
+                <rect x={-r} y={-r} width={2 * r} height={2 * r} transform="rotate(45)" fill={palette[tp.side]} stroke={sel ? "rgb(var(--accent))" : "rgb(var(--ink))"} strokeWidth={sel ? 3 : 1} />
+              </g>
+            );
+          })}
           {ticks.map((tk) => (
             <text key={tk.mm} x={x(tk.at)} y={H - 2} textAnchor="middle" className="num fill-muted" fontSize={12}>
               {tk.mm}′
@@ -154,6 +179,14 @@ export function MomentumStrip({ meta, liveStats, playNow, playHead, halfPlay, is
             <circle cy={2} r={5} fill="rgb(var(--ink))" />
           </g>
         </svg>
+        {hoverTp && (
+          <div
+            className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded bg-raised px-2 py-1 text-xs shadow-[var(--shadow)]"
+            style={{ left: x(hoverTp.play_s) }}
+          >
+            <span className="num mr-1 text-muted">{hoverTp.minute}′</span>◆ {hoverTp.label}
+          </div>
+        )}
         {hover && (
           <div
             className="pointer-events-none absolute -top-2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded bg-raised px-2 py-1 text-xs shadow-[var(--shadow)]"
