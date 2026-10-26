@@ -13,8 +13,11 @@ import json
 import logging
 import os
 from collections.abc import AsyncIterator
+from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
+
+FIRST_EVENT_TIMEOUT_S = float(os.getenv("EVENTHUB_TIMEOUT_S", "20"))
 
 
 async def replay(events, speed: float) -> AsyncIterator[dict]:
@@ -48,7 +51,7 @@ async def _eventhub_roundtrip(meta: dict, events, speed: float) -> AsyncIterator
         cred = DefaultAzureCredential()
         ns = os.environ["EVENTHUB_NAMESPACE"]
         producer = EventHubProducerClient(ns, name, cred)
-        consumer = EventHubConsumerClient(ns, "$Default", name, cred)
+        consumer = EventHubConsumerClient(ns, eventhub_name=name, consumer_group="$Default", credential=cred)
 
     match_id = meta["match_id"]
     queue: asyncio.Queue = asyncio.Queue()
@@ -70,16 +73,25 @@ async def _eventhub_roundtrip(meta: dict, events, speed: float) -> AsyncIterator
                 await producer.send_batch(batch)
                 last_index = d["index"]
 
-    consume = asyncio.create_task(consumer.receive(on_event=on_event, starting_position="@latest"))
-    await asyncio.sleep(2)  # let the consumer attach before the first event
+    # read from "now" by enqueued time, so events sent while partitions are still being claimed are kept
+    since = datetime.now(timezone.utc)
+    consume = asyncio.create_task(consumer.receive(on_event=on_event, starting_position=since))
     pub = asyncio.create_task(publish())
+    # the SDK retries connection and auth errors forever, so a silent hub must not stall the match
+    gap = FIRST_EVENT_TIMEOUT_S + (120 / speed if speed > 0 else 0)
     try:
         while True:
-            d = await queue.get()
+            try:
+                d = await asyncio.wait_for(queue.get(), gap)
+            except TimeoutError:
+                if pub.done() and not pub.cancelled() and pub.exception():
+                    raise pub.exception() from None
+                raise TimeoutError(f"no events back from Event Hubs in {gap:.0f} s") from None
             yield d
             if pub.done() and last_index is not None and d["index"] >= last_index:
                 break
     finally:
+        pub.cancel()
         consume.cancel()
         await consumer.close()
 
