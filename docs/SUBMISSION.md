@@ -33,7 +33,7 @@ About 75% product, 25% architecture. Record at 1920×1080 with seed 7 (Eastbrook
 
 | Time | Screen | Voice-over |
 | --- | --- | --- |
-| 0:00–0:10 | Landing: PITCHIQ, "From this match" card | "A stats site tells you possession was 68 percent. PITCHIQ tells you why the match is turning, while it happens." |
+| 0:00–0:10 | Landing: PITCHIQ and the setup panel | "A stats site tells you possession was 68 percent. PITCHIQ tells you why the match is turning, while it happens." |
 | 0:10–0:20 | Click the first match card, Analyst, Start match | "Every match here is synthetic: 1,900 realistic events, fictional clubs, tuned to real league averages." |
 | 0:20–0:42 | Turning points tab: open a card such as "SLT pin EBW back", show Observed, Why it matters, What to watch next, then **Show on pitch** | "Every minute, the Turning Point Engine compares the last ten minutes with the ten before. Here, field tilt jumped from 16 to 84 percent. Each insight separates what we observed from our reading and our hypothesis, with a confidence level, and links to the exact events behind it." |
 | 0:42–0:57 | Map buttons: Shots, then Sprints with the "Last 15′" window, live pitch still moving on the left | "Event maps open beside the live picture, never on top of it: chances by xG, passes by difficulty, control zones, sprints in any time window." |
