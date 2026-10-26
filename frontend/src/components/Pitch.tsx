@@ -5,6 +5,8 @@ import type { Strings } from "../i18n/strings";
 import type { TeamPalette } from "../lib/teamColors";
 import { ballAt, buildBallPath, fromDisplay, keyAt, lineupAt, slotTarget, toDisplay, type OnPitch } from "../pitch/motion";
 import type { MatchFeed } from "../state/useMatchFeed";
+import type { Layer, MapFilter } from "../pitch/layers";
+import { MapLayer, MapLegend } from "./MapLayer";
 
 const ASPECT = 105 / 68;
 const TRAIL_KEYS = 6;
@@ -26,11 +28,15 @@ interface Props {
   palette: TeamPalette;
   t: Strings;
   focusPlayerId?: string;
+  /** event map drawn over the live players ("live" = none) */
+  layer?: Layer;
+  filter?: MapFilter;
+  onPick?(clock_s: number): void;
   /** overlays, drawn inside the pitch box */
   children?: React.ReactNode;
 }
 
-export function Pitch({ feed, palette, t, focusPlayerId, children }: Props) {
+export function Pitch({ feed, palette, t, focusPlayerId, layer = "live", filter = {}, onPick = () => {}, children }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const dyn = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ w: 800, h: 800 / ASPECT });
@@ -224,7 +230,10 @@ export function Pitch({ feed, palette, t, focusPlayerId, children }: Props) {
   const my = (m: number) => y((m * 80) / 68);
   const stripes = d3.range(12);
   const period = feed.stats?.period ?? 1;
-  const homeRight = period !== 2;
+  const map = layer !== "live";
+  const homeRight = map || period !== 2; // maps use a fixed frame: home attacks right
+  const now = Math.floor(feed.clock);
+  const shown = useMemo(() => feed.events.filter((e) => e.clock_s <= now), [feed.version, now]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={wrap} className="absolute inset-0 flex items-center justify-center">
@@ -260,11 +269,14 @@ export function Pitch({ feed, palette, t, focusPlayerId, children }: Props) {
           })}
           <circle cx={x(60)} cy={y(40)} r={2} fill="rgb(var(--pitch-line) / 0.7)" />
         </g>
-        <g ref={dyn}>
+        <g ref={dyn} opacity={map ? 0.28 : 1}>
           <g className="trail" />
           <g className="players" />
           <circle className="ball" fill="#FFFFFF" stroke="#0B0F14" strokeWidth={1.5} display="none" />
         </g>
+        {meta && map && (
+          <MapLayer layer={layer} meta={meta} events={shown} now={now} filter={filter} palette={palette} x={x} y={y} onPick={onPick} />
+        )}
         {meta && (
           <g className="font-sans" fontSize={Math.max(11, w / 90)} fontWeight={600} fill="rgb(var(--pitch-line) / 0.8)">
             <text x={x(homeRight ? 2 : 118)} y={y(80) - 4} textAnchor={homeRight ? "start" : "end"}>
@@ -276,7 +288,7 @@ export function Pitch({ feed, palette, t, focusPlayerId, children }: Props) {
           </g>
         )}
       </svg>
-      <SpeedLegend label={t.ballSpeed} />
+      {map ? <MapLegend layer={layer} labels={t as unknown as Record<string, string>} /> : <SpeedLegend label={t.ballSpeed} />}
       {children}
       </div>
     </div>
