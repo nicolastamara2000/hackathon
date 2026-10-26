@@ -13,6 +13,7 @@ import { KIND } from "./components/Moments";
 import { LAYERS, layerForMetric, type Layer } from "./pitch/layers";
 import { TPCard, TPFanLine, TPTimeline } from "./components/TurningPoints";
 import { EventFeed } from "./components/EventFeed";
+import { MatchStory } from "./components/MatchStory";
 import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
@@ -24,7 +25,7 @@ import { useMatchFeed } from "./state/useMatchFeed";
 import { playTime, type Breaks } from "./stats/time";
 
 type Theme = "dark" | "light";
-type Tab = "turning" | "events" | "stats" | "moments";
+type Tab = "turning" | "story" | "events" | "stats" | "moments";
 
 const PALETTE_FALLBACK: TeamPalette = { home: "rgb(var(--home))", away: "rgb(var(--away))", onHome: "#fff", onAway: "#0B0F14" };
 const DEFAULTS: Choices = { seed: 7, mode: "fan", team: "", player: "", locale: "en", metric: "", speed: 20 };
@@ -321,7 +322,7 @@ function Live({
           <aside className="panel flex min-h-[420px] flex-col overflow-hidden lg:min-h-0">
             {offlineNote}
             <div className="flex border-b border-line" role="tablist">
-              {(["turning", "events", "stats", "moments"] as Tab[]).map((k) => (
+              {(["turning", "story", "events", "stats", "moments"] as Tab[]).map((k) => (
                 <button
                   key={k}
                   role="tab"
@@ -329,13 +330,31 @@ function Live({
                   onClick={() => setTab(k)}
                   className={`flex-auto whitespace-nowrap px-2 py-2.5 text-xs font-semibold sm:text-sm ${tab === k ? "border-b-2 border-accent text-ink" : "text-muted hover:text-ink"}`}
                 >
-                  {k === "moments" ? t.moments : k === "turning" ? `${t.turningTab} · ${tps.length}` : k === "events" ? t.eventsTab : t.stats}
+                  {k === "moments" ? t.moments : k === "turning" ? `◆ ${t.turningTab}` : k === "events" ? t.eventsTab : k === "story" ? t.storyTab : t.stats}
                 </button>
               ))}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
               {tab === "turning" ? (
                 <TurningPanel tps={tps} selected={selectedTp} onSelect={showTp} meta={meta} events={feed.events} palette={palette} locale={choices.locale} onJump={jump} />
+              ) : tab === "story" ? (
+                stats && (
+                  <MatchStory
+                    meta={meta}
+                    events={feed.events}
+                    clock={feed.clock}
+                    stats={stats}
+                    tps={tps}
+                    ended={feed.ended && feed.isLive}
+                    palette={palette}
+                    locale={choices.locale}
+                    onJump={jump}
+                    onTurning={(tp) => {
+                      showTp(tp);
+                      setTab("turning");
+                    }}
+                  />
+                )
               ) : tab === "events" ? (
                 <EventFeed
                   events={feed.events}

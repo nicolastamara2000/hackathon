@@ -125,6 +125,7 @@ const en = {
   layerInsight: "Turning point",
   turningTab: "Turning points",
   eventsTab: "Events",
+  storyTab: "Story",
 };
 
 export type Strings = typeof en;
@@ -250,6 +251,7 @@ const es: Strings = {
   layerInsight: "Punto de quiebre",
   turningTab: "Puntos de quiebre",
   eventsTab: "Eventos",
+  storyTab: "Historia",
 };
 
 export const STRINGS: Record<Locale, Strings> = { en, "es-419": es };
