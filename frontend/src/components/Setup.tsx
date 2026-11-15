@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { Fixture } from "../feed/live";
+import { STATIC } from "../feed/static";
 import type { MatchMeta, Team } from "../feed/types";
 import type { Locale, Strings } from "../i18n/strings";
 import { Crest } from "./Scoreboard";
@@ -74,7 +75,7 @@ export function Setup({ fixtures, metas, choices, setChoices, onStart, starting,
             </li>
           ))}
         </ul>
-        {offline && <p className="mt-4 rounded border border-warn/60 bg-warn/10 px-3 py-2 text-sm">{t.offline}</p>}
+        {offline && <p className="mt-4 rounded border border-warn/60 bg-warn/10 px-3 py-2 text-sm">{STATIC ? t.portfolio : t.offline}</p>}
         <p className="mt-6 text-2xs text-muted">{h.synthetic}</p>
       </section>
 
