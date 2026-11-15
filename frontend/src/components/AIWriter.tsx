@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AIError, writePlayerReport, writeStory, type AIPlayerReport, type AIStory, type AIStatus } from "../feed/ai";
+import { STATIC } from "../feed/static";
 import type { Locale } from "../i18n/strings";
 
 type State<T> = { kind: "idle" } | { kind: "busy" } | { kind: "done"; value: T; minute: number } | { kind: "error"; status: AIStatus };
@@ -14,6 +15,8 @@ const L = (locale: Locale) =>
         failed: "The AI writer could not produce a fact-checked text this time. Try again; the rule-based text stays below.",
         key: "Tactical key", next: "What to watch next", strengths: "Strengths", concerns: "Concerns", vs: "Head-to-head", verdict: "Verdict", asOf: "as of",
         intro: "A written match report that explains the football, not only the numbers.", introP: "A one-match scouting report on this player.",
+        none: "This static demo replays texts the Foundry agents wrote on the live Azure app, recorded at half-time and full-time. Try again after minute 45, or pick a player with a recording.",
+        rec: "Recorded from the live Foundry agent at",
       }
     : {
         story: "Historia del partido con IA", report: "Informe de rendimiento con IA", write: "Escribirla", rewrite: "Reescribir al", busy: "Escribiendo… (10–30 s)",
@@ -23,6 +26,8 @@ const L = (locale: Locale) =>
         failed: "El escritor IA no logró un texto que pase el chequeo de datos. Probá de nuevo; el texto basado en reglas sigue abajo.",
         key: "La clave táctica", next: "Qué mirar ahora", strengths: "Fortalezas", concerns: "Dudas", vs: "Mano a mano", verdict: "Veredicto", asOf: "al",
         intro: "Una crónica escrita que explica el fútbol, no solo los números.", introP: "Un informe scout de un partido sobre este jugador.",
+        none: "Esta demo estática muestra textos que los agentes de Foundry escribieron en la app en vivo de Azure, grabados al entretiempo y al final. Probá después del minuto 45, o elegí un jugador con grabación.",
+        rec: "Grabado del agente de Foundry en vivo al",
       };
 
 function useWriter<T>(write: (facts: unknown, locale: string) => Promise<T>, resetKey: string) {
@@ -31,7 +36,7 @@ function useWriter<T>(write: (facts: unknown, locale: string) => Promise<T>, res
   const run = (facts: unknown, locale: string, minute: number) => {
     setState({ kind: "busy" });
     write(facts, locale)
-      .then((value) => setState({ kind: "done", value, minute }))
+      .then((value) => setState({ kind: "done", value, minute: (value as { recorded_minute?: number }).recorded_minute ?? minute }))
       .catch((e) => setState({ kind: "error", status: e instanceof AIError ? e.status : "failed" }));
   };
   return [state, run] as const;
@@ -43,7 +48,7 @@ function Shell({ title, intro, state, minute, locale, onWrite, children }: { tit
     <section className="rounded-lg border border-accent/40 bg-accent/5 p-3">
       <div className="flex items-center gap-2">
         <h3 className="eyebrow text-accent">✦ {title}</h3>
-        {state.kind === "done" && <span className="num text-2xs text-muted">{l.asOf} {state.minute}′</span>}
+        {state.kind === "done" && <span className="num text-2xs text-muted">{STATIC ? l.rec : l.asOf} {state.minute}′</span>}
         <button
           onClick={onWrite}
           disabled={state.kind === "busy"}
@@ -53,7 +58,7 @@ function Shell({ title, intro, state, minute, locale, onWrite, children }: { tit
         </button>
       </div>
       {state.kind === "idle" && <p className="mt-1 text-sm text-muted">{intro}</p>}
-      {state.kind === "error" && <p className="mt-2 text-sm text-muted">{state.status === "off" ? l.off : l.failed}</p>}
+      {state.kind === "error" && <p className="mt-2 text-sm text-muted">{state.status === "off" ? l.off : state.status === "none" ? l.none : l.failed}</p>}
       {children}
     </section>
   );
