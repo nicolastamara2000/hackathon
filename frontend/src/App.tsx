@@ -19,6 +19,7 @@ import { playerFacts } from "./stats/aiFacts";
 import { tpText } from "./i18n/turning";
 import { turningPoints, type TurningPoint } from "./stats/turning";
 import { connectDemo, loadDemoMatch } from "./feed/connect";
+import { STATIC } from "./feed/static";
 import { fetchFixtures, fetchMeta, LiveSocket, startBroadcast, type Fixture } from "./feed/live";
 import type { MatchEvent, MatchMeta, MomentCard } from "./feed/types";
 import { STRINGS, type Locale } from "./i18n/strings";
@@ -55,7 +56,7 @@ export default function App() {
 
   // fixtures from the backend; the bundled demo match if it is not reachable
   useEffect(() => {
-    fetchFixtures()
+    (STATIC ? Promise.reject(new Error("static demo")) : fetchFixtures())
       .then((f) => {
         setFixtures(f);
         if (f.length && !f.some((x) => x.seed === DEFAULTS.seed)) setChoices((c) => ({ ...c, seed: f[0].seed }));
@@ -344,7 +345,7 @@ function Live({
         onJump={jump}
       />
     );
-  const offlineNote = offline && <p className="border-b border-line bg-warn/10 px-4 py-2 text-xs">{t.offline}</p>;
+  const offlineNote = offline && <p className="border-b border-line bg-warn/10 px-4 py-2 text-xs">{STATIC ? t.portfolio : t.offline}</p>;
 
   return (
     <>
