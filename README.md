@@ -2,6 +2,12 @@
 
 **Real-time football intelligence from synthetic match events: what changed, why it matters and what to watch next.**
 
+
+
+https://github.com/user-attachments/assets/920917c8-f6b2-43d6-811c-797cb4b30da3
+
+
+
 A solo football data engineering project, built for the Microsoft football AI hackathon (Oct 2026):
 a synthetic event-data generator, a streaming pipeline on Azure, metrics and tactical engines, and
 AI agents on Microsoft Foundry that explain only numbers the engines verified.
